@@ -508,11 +508,33 @@ export default function EscrowDetailPage({
                           <div className="font-display text-sm font-bold uppercase tracking-wider mb-1 pb-3 border-b border-[var(--border)]">
                             Your Decision
                           </div>
-                          <div className="text-xs text-[var(--muted)] mb-4 pt-3">
+                          <div className="text-xs text-[var(--muted)] mb-3 pt-3">
                             {latestVerification
-                              ? `AI scores this submission ${latestVerification.score}/100 and recommends ${latestVerification.recommendation.replace("_", " ")}. The final decision is yours.`
-                              : "Review the submission above and accept to release funds or reject to request changes."}
+                              ? `AI scores this submission ${latestVerification.score}/100 and recommends ${latestVerification.recommendation.replace("_", " ")}.`
+                              : "Review the submission above and approve to release funds or reject to request changes."}
                           </div>
+
+                          {/* Client override note when AI is not fully positive */}
+                          {latestVerification && latestVerification.recommendation !== "approve" && (
+                            <div
+                              className="p-3 rounded-lg mb-4 flex items-start gap-2"
+                              style={{
+                                background: "var(--surface2)",
+                                border: "0.5px solid var(--border)",
+                              }}
+                            >
+                              <span className="text-sm flex-shrink-0" style={{ color: "var(--accent)" }}>★</span>
+                              <div>
+                                <div className="text-xs font-medium mb-0.5" style={{ color: "var(--text)" }}>
+                                  You have final say
+                                </div>
+                                <div className="text-xs" style={{ color: "var(--muted)" }}>
+                                  AI is advisory only. If you've reviewed the work and are satisfied, you can approve regardless of the AI score.
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           <div className="flex gap-3">
                             <div className="flex-1">
                               <ReleaseFundsButton

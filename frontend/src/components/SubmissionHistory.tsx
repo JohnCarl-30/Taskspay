@@ -324,6 +324,8 @@ function SubmissionCard({
  * SubmissionHistory component
  * Displays chronological list of all submissions and verifications for a milestone
  */
+const VISIBLE_COUNT = 2;
+
 export default function SubmissionHistory({
   escrowId,
   milestoneIndex,
@@ -336,6 +338,7 @@ export default function SubmissionHistory({
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<
     string | null
   >(null);
+  const [showAll, setShowAll] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -486,6 +489,9 @@ export default function SubmissionHistory({
   }
 
   // Submissions list
+  const visibleSubmissions = showAll ? submissions : submissions.slice(0, VISIBLE_COUNT);
+  const hiddenCount = submissions.length - VISIBLE_COUNT;
+
   return (
     <div
       className="p-5 rounded-lg border"
@@ -502,7 +508,7 @@ export default function SubmissionHistory({
       </div>
 
       <div className="space-y-3">
-        {submissions.map((submission, index) => (
+        {visibleSubmissions.map((submission, index) => (
           <SubmissionCard
             key={submission.id}
             submission={submission}
@@ -513,6 +519,20 @@ export default function SubmissionHistory({
           />
         ))}
       </div>
+
+      {hiddenCount > 0 && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="mt-3 w-full py-2 text-xs uppercase tracking-widest rounded border transition-colors cursor-pointer"
+          style={{
+            background: "transparent",
+            color: "var(--muted)",
+            borderColor: "var(--border)",
+          }}
+        >
+          {showAll ? "Show less" : `Show ${hiddenCount} older submission${hiddenCount !== 1 ? "s" : ""}`}
+        </button>
+      )}
     </div>
   );
 }
