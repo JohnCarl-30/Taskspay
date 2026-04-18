@@ -140,8 +140,9 @@ export async function submitWork(params: {
   submitterAddress: string;
   description: string;
   urls: string[];
+  images?: string[];
 }): Promise<WorkSubmission> {
-  const { escrowId, milestoneIndex, submitterAddress, description, urls } = params;
+  const { escrowId, milestoneIndex, submitterAddress, description, urls, images = [] } = params;
   
   // Input validation
   validateDescription(description);
@@ -170,6 +171,7 @@ export async function submitWork(params: {
     submitter_address: submitterAddress,
     description: description.trim(),
     urls: urls.map(url => url.trim()),
+    images: images && images.length > 0 ? images : [],
   };
   
   // Insert with retry logic

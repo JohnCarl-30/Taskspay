@@ -301,6 +301,34 @@ function SubmissionCard({
             </div>
           )}
 
+          {/* Submission Images */}
+          {submission.images && submission.images.length > 0 && (
+            <div className="mb-3">
+              <div className="text-xs uppercase tracking-widest text-[var(--muted)] mb-1.5">
+                Photos ({submission.images.length})
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {submission.images.map((image, index) => (
+                  <div
+                    key={index}
+                    className="rounded-lg border overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                    style={{ borderColor: "var(--border)" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(image, "_blank");
+                    }}
+                  >
+                    <img
+                      src={image}
+                      alt={`Photo ${index + 1}`}
+                      className="w-full h-32 object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Submission Metadata */}
           <div
             className="pt-3 border-t"

@@ -285,6 +285,11 @@ export default function EscrowDetailPage({
       </div>
       <div className="mb-2 font-display text-2xl font-bold tracking-tight">{escrow.title}</div>
 
+      {/* DEBUG: Show on_chain_id status */}
+      <div className="mb-4 text-xs text-[var(--muted)]">
+        On-Chain ID: {escrow.on_chain_id === null ? "❌ NULL (not deployed)" : escrow.on_chain_id === undefined ? "❌ UNDEFINED" : `✓ ${escrow.on_chain_id}`}
+      </div>
+
       {/* Role badge */}
       <div className="mb-4 flex items-center gap-2">
         {isClient && (
@@ -473,7 +478,7 @@ export default function EscrowDetailPage({
                           <div className="text-sm leading-relaxed text-[var(--text)] whitespace-pre-wrap">{latestSubmission.description}</div>
                         </div>
                         {latestSubmission.urls && latestSubmission.urls.length > 0 && (
-                          <div>
+                          <div className="mb-3">
                             <div className="text-xs uppercase tracking-widest text-[var(--muted)] mb-1.5">Supporting Links</div>
                             <ul className="space-y-1">
                               {latestSubmission.urls.map((url, i) => (
@@ -484,6 +489,28 @@ export default function EscrowDetailPage({
                                 </li>
                               ))}
                             </ul>
+                          </div>
+                        )}
+
+                        {latestSubmission.images && latestSubmission.images.length > 0 && (
+                          <div>
+                            <div className="text-xs uppercase tracking-widest text-[var(--muted)] mb-1.5">Photos ({latestSubmission.images.length})</div>
+                            <div className="grid grid-cols-3 gap-2">
+                              {latestSubmission.images.map((image, i) => (
+                                <div
+                                  key={i}
+                                  className="rounded-lg border overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                                  style={{ borderColor: "var(--border)" }}
+                                  onClick={() => window.open(image, "_blank")}
+                                >
+                                  <img
+                                    src={image}
+                                    alt={`Photo ${i + 1}`}
+                                    className="w-full h-24 object-cover"
+                                  />
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>

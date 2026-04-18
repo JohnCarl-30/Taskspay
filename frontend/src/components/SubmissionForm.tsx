@@ -19,6 +19,8 @@ interface ValidationErrors {
 
 const MAX_DESCRIPTION_LENGTH = 2000;
 const MAX_URLS = 5;
+const MAX_IMAGES = 10;
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB per image
 const URL_REGEX = /^https?:\/\/[^\s]+$/;
 
 export default function SubmissionForm({
@@ -31,6 +33,7 @@ export default function SubmissionForm({
 }: SubmissionFormProps) {
   const [description, setDescription] = useState("");
   const [urls, setUrls] = useState<string[]>([""]);
+  const [images, setImages] = useState<string[]>([]); // Base64 encoded images
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [submissionId, setSubmissionId] = useState<string | null>(null);
@@ -139,6 +142,47 @@ export default function SubmissionForm({
     }
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.currentTarget.files;
+    if (!files) return;
+
+    // Check if adding these images would exceed the limit
+    if (images.length + files.length > MAX_IMAGES) {
+      alert(`Maximum ${MAX_IMAGES} images allowed. You can add ${MAX_IMAGES - images.length} more.`);
+      return;
+    }
+
+    // Process each file
+    Array.from(files).forEach((file) => {
+      // Check file size
+      if (file.size > MAX_IMAGE_SIZE) {
+        alert(`Image "${file.name}" exceeds 5MB limit`);
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith("image/")) {
+        alert(`"${file.name}" is not a valid image file`);
+        return;
+      }
+
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        setImages((prev) => [...prev, base64]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Reset input
+    e.currentTarget.value = "";
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) {
       return;
@@ -165,6 +209,7 @@ export default function SubmissionForm({
         submitterAddress,
         description: description.trim(),
         urls: nonEmptyUrls,
+        images: images,
       });
 
       setSubmissionId(submission.id);
@@ -174,6 +219,7 @@ export default function SubmissionForm({
       setTimeout(() => {
         setDescription("");
         setUrls([""]);
+        setImages([]);
         setSubmissionId(null);
       }, 3000);
     } catch (error) {
@@ -279,6 +325,78 @@ export default function SubmissionForm({
           >
             + Add URL ({urls.length}/{MAX_URLS})
           </button>
+        )}
+      </div>
+
+      {/* Image Upload */}
+      <div className="mb-3.5">
+        <label className="text-xs uppercase tracking-widest text-[var(--muted)] mb-1.5 block">
+          Upload Photos (Optional)
+        </label>
+        
+        {/* Upload Area */}
+        <div
+          className="p-4 rounded-lg border-2 border-dashed text-center cursor-pointer transition-colors"
+          style={{
+            borderColor: "var(--border)",
+            background: "var(--surface2)",
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files) {
+              const input = document.createElement("input");
+              input.type = "file";
+              input.multiple = true;
+              input.accept = "image/*";
+              Object.defineProperty(input, "files", { value: files });
+              handleImageUpload({ currentTarget: input } as React.ChangeEvent<HTMLInputElement>);
+            }
+          }}
+          onDragOver={(e) => e.preventDefault()}
+        >
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleImageUpload}
+            disabled={isSubmitting || images.length >= MAX_IMAGES}
+            className="hidden"
+            id="image-input"
+          />
+          <label htmlFor="image-input" className="cursor-pointer block">
+            <div className="text-2xl mb-1">📸</div>
+            <div className="text-xs font-medium mb-0.5" style={{ color: "var(--text)" }}>
+              Drop photos or click to upload
+            </div>
+            <div className="text-xs" style={{ color: "var(--muted)" }}>
+              {images.length}/{MAX_IMAGES} photos · Max 5MB each
+            </div>
+          </label>
+        </div>
+
+        {/* Image Preview Grid */}
+        {images.length > 0 && (
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            {images.map((image, index) => (
+              <div key={index} className="relative group">
+                <img
+                  src={image}
+                  alt={`Upload ${index + 1}`}
+                  className="w-full h-24 object-cover rounded-lg border"
+                  style={{ borderColor: "var(--border)" }}
+                />
+                <button
+                  onClick={() => handleRemoveImage(index)}
+                  disabled={isSubmitting}
+                  className="absolute top-1 right-1 p-1 rounded bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                  type="button"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

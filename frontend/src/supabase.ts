@@ -25,6 +25,7 @@ export interface WorkSubmission {
   submitter_address: string;
   description: string;
   urls: string[];
+  images?: string[];
   client_decision: 'accepted' | 'rejected' | null;
 }
 
@@ -34,6 +35,7 @@ export interface WorkSubmissionInsert {
   submitter_address: string;
   description: string;
   urls: string[];
+  images?: string[];
 }
 
 // Delivery Verification interfaces
