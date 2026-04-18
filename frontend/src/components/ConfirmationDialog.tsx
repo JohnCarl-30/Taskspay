@@ -1,6 +1,19 @@
 import { useEffect } from "react";
 import type { DeliveryVerification } from "../supabase";
 
+/**
+ * ConfirmationDialog Component
+ * 
+ * Accessibility Features (WCAG AA Compliant):
+ * - Modal dialog with proper ARIA attributes (role="dialog", aria-modal="true")
+ * - Focus trap: Tab navigation cycles between dialog buttons only
+ * - Auto-focus: Confirm button receives focus on mount
+ * - Keyboard shortcuts: Enter to confirm, Escape to cancel
+ * - Minimum 44x44px touch targets for all buttons
+ * - Focus states: Visible focus rings with scale transform
+ * - Screen reader support: Descriptive aria-labels on all interactive elements
+ */
+
 export interface ConfirmationDialogProps {
   milestoneName: string;
   amount: number;
@@ -84,12 +97,42 @@ export default function ConfirmationDialog({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onConfirm, onCancel]);
 
-  // Focus trap - focus first button on mount
+  // Focus trap - focus first button on mount and trap focus within dialog
   useEffect(() => {
     const confirmButton = document.getElementById("confirm-release-button");
+    const cancelButton = document.getElementById("cancel-release-button");
+    
     if (confirmButton) {
       confirmButton.focus();
     }
+
+    // Focus trap handler
+    const handleTabKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      const focusableElements = [cancelButton, confirmButton].filter(Boolean);
+      if (focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleTabKey);
+    return () => window.removeEventListener('keydown', handleTabKey);
   }, []);
 
   return (
@@ -191,18 +234,27 @@ export default function ConfirmationDialog({
           {/* Action Buttons */}
           <div className="flex gap-3">
             <button
+              id="cancel-release-button"
               onClick={onCancel}
-              className="flex-1 py-2.5 text-xs font-display font-bold uppercase tracking-wider border rounded cursor-pointer transition-colors"
+              className="flex-1 py-2.5 text-xs font-display font-bold uppercase tracking-wider border rounded cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-[var(--border2)] focus:ring-offset-2 focus:ring-offset-[var(--surface)]"
               style={{
                 background: "transparent",
                 borderColor: "var(--border2)",
                 color: "var(--text)",
+                minHeight: "44px",
               }}
+              aria-label="Cancel payment release"
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "var(--surface2)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = "transparent";
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.transform = "scale(1.02)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
               }}
             >
               Cancel
@@ -210,16 +262,24 @@ export default function ConfirmationDialog({
             <button
               id="confirm-release-button"
               onClick={onConfirm}
-              className="flex-1 py-2.5 text-xs font-display font-bold uppercase tracking-wider border-0 rounded cursor-pointer transition-opacity"
+              className="flex-1 py-2.5 text-xs font-display font-bold uppercase tracking-wider border-0 rounded cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--surface)]"
               style={{
                 background: "var(--accent)",
                 color: "#0a0a0a",
+                minHeight: "44px",
               }}
+              aria-label={`Confirm release of ${amount.toFixed(2)} XLM for ${milestoneName}`}
               onMouseEnter={(e) => {
                 e.currentTarget.style.opacity = "0.9";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.opacity = "1";
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.transform = "scale(1.02)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
               }}
             >
               Confirm Release →

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import SubmissionForm from "../components/SubmissionForm";
 import VerificationReport from "../components/VerificationReport";
 import SubmissionHistory from "../components/SubmissionHistory";
+import ReleaseFundsButton from "../components/ReleaseFundsButton";
 import { supabase } from "../supabase";
 import { fetchMilestoneSubmissions } from "../api/submissions";
 import { fetchVerificationCached, verifyWorkSubmission } from "../api/verifications";
@@ -22,6 +23,7 @@ interface EscrowDetail {
   totalAmount: number;
   milestones: Milestone[];
   currentMilestoneIndex: number;
+  on_chain_id: number | null;
 }
 
 interface WalletState {
@@ -36,6 +38,7 @@ interface EscrowDetailPageProps {
 }
 
 export default function EscrowDetailPage({
+  wallet,
   escrowId,
   setPage,
 }: EscrowDetailPageProps) {
@@ -75,6 +78,7 @@ export default function EscrowDetailPage({
           totalAmount: data.amount,
           currentMilestoneIndex:
             currentIndex === -1 ? data.milestones.length - 1 : currentIndex,
+          on_chain_id: data.on_chain_id,
           milestones: data.milestones.map(
             (
               m: { name: string; description: string; percentage: number; xlm: number },
@@ -215,6 +219,63 @@ export default function EscrowDetailPage({
   const handleSubmitError = (error: Error) => {
     console.error("Submission error:", error);
     setErrorMessage(error.message || "Failed to submit work. Please try again.");
+    setSuccessMessage(null);
+  };
+
+  const handleReleaseFundsSuccess = async () => {
+    setSuccessMessage("Payment released successfully!");
+    setErrorMessage(null);
+    
+    // Refresh escrow data to update milestone status
+    try {
+      const { data, error: fetchError } = await supabase
+        .from("escrows")
+        .select("*")
+        .eq("id", escrowId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!data) throw new Error("Escrow not found");
+
+      const releases: Array<{ milestone_index: number }> =
+        data.payment_releases ?? [];
+      const releasedIndices = new Set(releases.map((r) => r.milestone_index));
+      const currentIndex = data.milestones.findIndex(
+        (_: unknown, i: number) => !releasedIndices.has(i)
+      );
+
+      setEscrow({
+        id: data.id,
+        title: data.description,
+        freelancerAddress: data.freelancer_address,
+        totalAmount: data.amount,
+        currentMilestoneIndex:
+          currentIndex === -1 ? data.milestones.length - 1 : currentIndex,
+        on_chain_id: data.on_chain_id,
+        milestones: data.milestones.map(
+          (
+            m: { name: string; description: string; percentage: number; xlm: number },
+            i: number
+          ) => ({
+            ...m,
+            status: releasedIndices.has(i)
+              ? ("completed" as const)
+              : i === currentIndex
+                ? ("active" as const)
+                : ("pending" as const),
+          })
+        ),
+      });
+    } catch (err) {
+      console.error("Failed to refresh escrow data:", err);
+    }
+
+    setTimeout(() => setSuccessMessage(null), 5000);
+  };
+
+  const handleReleaseFundsError = (error: Error) => {
+    console.error("Release funds error:", error);
+    setErrorMessage(error.message || "Failed to release funds. Please try again.");
     setSuccessMessage(null);
   };
 
@@ -425,6 +486,23 @@ export default function EscrowDetailPage({
                     verification={latestVerification}
                     submission={latestSubmission}
                     showFullSubmission={false}
+                  />
+                </div>
+              )}
+
+              {/* Release Funds Button - only show for active milestone when wallet connected and on_chain_id exists */}
+              {wallet && escrow.on_chain_id && (
+                <div className="mt-4">
+                  <ReleaseFundsButton
+                    escrowId={escrow.id}
+                    onChainEscrowId={escrow.on_chain_id}
+                    milestoneIndex={escrow.currentMilestoneIndex}
+                    milestoneName={activeMilestone.name}
+                    milestoneAmount={activeMilestone.xlm}
+                    clientAddress={wallet.publicKey}
+                    verification={latestVerification}
+                    onSuccess={handleReleaseFundsSuccess}
+                    onError={handleReleaseFundsError}
                   />
                 </div>
               )}

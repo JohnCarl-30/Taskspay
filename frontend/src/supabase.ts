@@ -478,6 +478,7 @@ export const insertEscrowOptimistic = async (
     tx_hash: null,
     status: 'pending',
     verification_result: escrow.verification_result || null,
+    on_chain_id: escrow.on_chain_id ?? null,
   };
   
   // Update UI immediately
@@ -494,4 +495,81 @@ export const insertEscrowOptimistic = async (
     console.error('Optimistic update failed, caller should rollback', error);
     throw error;
   }
+};
+
+/**
+ * Payment release record interface
+ * Represents a single payment release in the audit trail
+ */
+export interface PaymentRelease {
+  milestone_index: number;
+  released_at: string;
+  tx_hash: string;
+  verification_id?: string;
+  score?: number;
+  recommendation?: 'approve' | 'request_changes' | 'reject';
+}
+
+/**
+ * Update escrow payment_releases array with a new payment release record
+ * Fetches current payment_releases, appends new record, and saves to database
+ * Includes retry logic with exponential backoff for resilience
+ * 
+ * @param escrowId - The UUID of the escrow to update
+ * @param paymentRelease - The payment release record to append
+ * @returns The updated escrow record
+ * @throws Error if fetch or update fails after all retries
+ */
+export const updateEscrowPaymentReleases = async (
+  escrowId: string,
+  paymentRelease: PaymentRelease
+): Promise<EscrowRecord> => {
+  return retryWithBackoff(async () => {
+    try {
+      // Step 1: Fetch current payment_releases array
+      const { data: escrow, error: fetchError } = await supabase
+        .from('escrows')
+        .select('payment_releases')
+        .eq('id', escrowId)
+        .single();
+      
+      if (fetchError) {
+        console.error('Fetch payment_releases error:', fetchError);
+        throw new Error(`Failed to fetch payment_releases: ${fetchError.message}`);
+      }
+      
+      if (!escrow) {
+        throw new Error('Escrow not found');
+      }
+      
+      // Step 2: Append new payment release record
+      const currentReleases = (escrow.payment_releases as PaymentRelease[]) || [];
+      const updatedReleases = [...currentReleases, paymentRelease];
+      
+      console.log(`Appending payment release for milestone ${paymentRelease.milestone_index} to escrow ${escrowId}`);
+      
+      // Step 3: Call updateEscrow to save updated payment_releases array
+      const updatedEscrow = await updateEscrow(escrowId, {
+        payment_releases: updatedReleases,
+      });
+      
+      console.log(`Successfully updated payment_releases for escrow ${escrowId}`);
+      
+      return updatedEscrow;
+    } catch (error) {
+      console.error('Update payment_releases error:', error);
+      
+      // Provide user-friendly error message
+      if (error instanceof Error) {
+        if (error.message.includes('not found')) {
+          throw new Error('Escrow not found in database');
+        }
+        if (error.message.includes('permission')) {
+          throw new Error('Permission denied: unable to update payment releases');
+        }
+      }
+      
+      throw error;
+    }
+  });
 };
