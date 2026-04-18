@@ -12,6 +12,7 @@ interface TopbarProps {
   wallet: WalletState | null;
   onConnect: () => Promise<void>;
   role: "client" | "freelancer" | null;
+  onSwitchRole?: () => void;
 }
 
 export default function Topbar({
@@ -20,6 +21,7 @@ export default function Topbar({
   wallet,
   onConnect,
   role,
+  onSwitchRole,
 }: TopbarProps) {
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -78,7 +80,17 @@ export default function Topbar({
 
         {wallet ? (
           <div className="flex items-center gap-3">
-            {role && (
+            {role && onSwitchRole && (
+              <button
+                onClick={onSwitchRole}
+                className="text-xs uppercase tracking-widest px-2 py-0.5 rounded font-medium border-0 cursor-pointer transition-opacity duration-150 hover:opacity-70"
+                style={roleBadgeStyle}
+                title="Click to switch role"
+              >
+                {role}
+              </button>
+            )}
+            {role && !onSwitchRole && (
               <span
                 className="text-xs uppercase tracking-widest px-2 py-0.5 rounded font-medium"
                 style={roleBadgeStyle}
