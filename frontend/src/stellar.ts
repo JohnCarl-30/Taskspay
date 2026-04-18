@@ -88,6 +88,36 @@ interface SendTransactionResponse {
   status: string;
 }
 
+/**
+ * Submits a signed tx XDR to the network and polls until the ledger confirms
+ * SUCCESS or FAILED. Soroban RPC returns PENDING immediately, which is not
+ * enough to know the tx actually landed — callers that don't wait end up
+ * acting on a tx that hasn't been applied yet (e.g. saving an on_chain_id
+ * that doesn't exist).
+ */
+const submitAndConfirm = async (
+  signedXdr: string
+): Promise<SendTransactionResponse> => {
+  const submitted = await server.sendTransaction(
+    TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE)
+  );
+
+  for (let i = 0; i < 20; i++) {
+    await new Promise((r) => setTimeout(r, 1000));
+    const status = await server.getTransaction(submitted.hash);
+    if (status.status === "SUCCESS") {
+      return { hash: submitted.hash, status: "SUCCESS" };
+    }
+    if (status.status === "FAILED") {
+      throw new Error(
+        `Transaction failed on-chain: ${submitted.hash}. See stellar.expert/explorer/testnet/tx/${submitted.hash}`
+      );
+    }
+  }
+
+  return submitted;
+};
+
 export const createEscrow = async (
   sourcePublicKey: string,
   freelancerAddress: string,
@@ -278,9 +308,22 @@ export const initializeContract = async (
     const builtTx = await buildContractCall(sourcePublicKey, "initialize", args);
     const signedXdr = await signTransaction(builtTx.toXDR());
 
-    return await server.sendTransaction(
+    const submitted = await server.sendTransaction(
       TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE)
     );
+
+    // Poll until the tx is confirmed on-chain (Stellar settles in ~5s).
+    for (let i = 0; i < 20; i++) {
+      await new Promise((r) => setTimeout(r, 1000));
+      const status = await server.getTransaction(submitted.hash);
+      if (status.status === "SUCCESS") return { hash: submitted.hash, status: "SUCCESS" };
+      if (status.status === "FAILED")
+        throw new Error(`Initialize transaction failed on-chain: ${submitted.hash}`);
+      // NOT_FOUND → still pending, keep polling
+    }
+
+    // Timed out but tx was submitted — return the hash so UI can show it.
+    return submitted;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
 
