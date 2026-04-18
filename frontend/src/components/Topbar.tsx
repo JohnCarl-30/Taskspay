@@ -56,10 +56,6 @@ export default function Topbar({
     setConfirmSwitch(true);
   };
 
-  const handleConfirmSwitch = async () => {
-    await handleConnect();
-  };
-
   const handleDisconnectClick = () => {
     setDropdownOpen(false);
     setConfirmSwitch(false);
