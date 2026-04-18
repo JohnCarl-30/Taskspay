@@ -267,7 +267,8 @@ export default function EscrowDetailPage({
 
   const canDecide =
     isClient &&
-    !!escrow.on_chain_id &&
+    escrow.on_chain_id !== null &&
+    escrow.on_chain_id !== undefined &&
     latestSubmission !== null &&
     latestSubmission.client_decision === null &&
     !isVerifying;
