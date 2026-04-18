@@ -36,14 +36,8 @@ impl EscrowContract {
     /// One-time setup: set the XLM token contract address used for transfers.
     /// Must be called before any escrow is created. On testnet, use the native
     /// Stellar Asset Contract address: CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2QDGDG6
+    /// Safe to call multiple times - will update the token address if already set
     pub fn initialize(env: Env, token: Address) {
-        assert!(
-            env.storage()
-                .instance()
-                .get::<DataKey, Address>(&DataKey::TokenAddress)
-                .is_none(),
-            "Already initialized"
-        );
         env.storage().instance().set(&DataKey::TokenAddress, &token);
     }
 

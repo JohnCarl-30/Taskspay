@@ -38,16 +38,35 @@ export default function HomePage({
 }: HomePageProps) {
   const [initializing, setInitializing] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [checkingInit, setCheckingInit] = useState(true);
 
   // Check contract initialization status on component mount
   useEffect(() => {
     const checkInitialization = async () => {
+      setCheckingInit(true);
       try {
+        // Check if we've already cached this result (only cache true, not false)
+        const cached = localStorage.getItem("contractInitialized");
+        if (cached === "true") {
+          setInitialized(true);
+          setCheckingInit(false);
+          return;
+        }
+
         const isInit = await isContractInitialized();
         setInitialized(isInit);
+        
+        // Cache true result only (temporary - expires on page refresh)
+        if (isInit) {
+          localStorage.setItem("contractInitialized", "true");
+        }
+        
+        console.log("Contract initialization status:", isInit);
       } catch (error) {
         console.error("Failed to check contract initialization:", error);
         setInitialized(false);
+      } finally {
+        setCheckingInit(false);
       }
     };
 
@@ -63,10 +82,25 @@ export default function HomePage({
     }
 
     setInitializing(true);
+    // Clear the cache since we're about to reinitialize
+    localStorage.removeItem("contractInitialized");
+    
     try {
       const result = await initializeContract(wallet.publicKey, signTransaction);
       alert(`✓ Contract initialized!\nTransaction: ${result.hash}`);
-      setInitialized(true);
+      
+      // Wait a moment then re-check contract status to confirm
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const isInit = await isContractInitialized();
+      setInitialized(isInit);
+      
+      if (isInit) {
+        localStorage.setItem("contractInitialized", "true");
+      }
+      
+      if (!isInit) {
+        console.warn("Contract status verification failed - may still be initializing on-chain");
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       alert(`Failed to initialize: ${message}`);
@@ -124,7 +158,7 @@ export default function HomePage({
           icon="→"
           onClick={() => setPage("history")}
         />
-        {!initialized && wallet && (
+        {!initialized && wallet && !checkingInit && (
           <button
             onClick={handleInitializeContract}
             disabled={initializing}

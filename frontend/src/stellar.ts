@@ -218,12 +218,16 @@ export const isContractInitialized = async (): Promise<boolean> => {
     const simResult = await server.simulateTransaction(tx);
 
     if (SorobanRpc.Api.isSimulationError(simResult)) {
-      throw new Error(`Check failed: ${simResult.error}`);
+      console.warn("Contract initialization check failed:", simResult.error);
+      return false;
     }
 
-    return scValToNative(simResult.result!.retval) as boolean;
+    const result = scValToNative(simResult.result!.retval) as boolean;
+    console.log("Contract initialized:", result);
+    return result;
   } catch (error) {
-    console.error("Failed to check contract initialization:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn("Failed to check contract initialization:", message);
     return false;
   }
 };
