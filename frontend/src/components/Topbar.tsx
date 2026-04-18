@@ -98,9 +98,14 @@ export default function Topbar({
                 {role}
               </span>
             )}
-            <div className="text-xs text-[var(--muted)] font-mono">
-              {formatAddress(wallet.publicKey)}
-            </div>
+            <button
+              onClick={handleConnect}
+              disabled={isConnecting}
+              className="text-xs text-[var(--muted)] font-mono border-0 bg-transparent cursor-pointer transition-opacity duration-150 hover:opacity-70"
+              title="Switch wallet"
+            >
+              {isConnecting ? "Connecting..." : formatAddress(wallet.publicKey)}
+            </button>
           </div>
         ) : (
           <button
