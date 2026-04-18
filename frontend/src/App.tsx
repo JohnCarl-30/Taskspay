@@ -183,6 +183,12 @@ export default function App() {
     }
   }, [wallet]);
 
+  const refreshBalance = useCallback(() => {
+    if (wallet?.publicKey) {
+      getXLMBalance(wallet.publicKey).then(setBalance);
+    }
+  }, [wallet?.publicKey]);
+
   const handleConnect = async () => {
     setWalletError(null);
     try {
@@ -341,6 +347,7 @@ export default function App() {
             escrowId={selectedEscrowId}
             setPage={setPage}
             onEscrowUpdated={refreshEscrows}
+            onBalanceUpdated={refreshBalance}
           />
         )}
 

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EscrowCard from "../components/EscrowCard";
-import { TX_EXPLORER_URL, initializeContract } from "../stellar";
+import { TX_EXPLORER_URL, initializeContract, isContractInitialized } from "../stellar";
 import { signTransaction } from "../freighter";
 
 interface Escrow {
@@ -38,6 +38,21 @@ export default function HomePage({
 }: HomePageProps) {
   const [initializing, setInitializing] = useState(false);
   const [initialized, setInitialized] = useState(false);
+
+  // Check contract initialization status on component mount
+  useEffect(() => {
+    const checkInitialization = async () => {
+      try {
+        const isInit = await isContractInitialized();
+        setInitialized(isInit);
+      } catch (error) {
+        console.error("Failed to check contract initialization:", error);
+        setInitialized(false);
+      }
+    };
+
+    checkInitialization();
+  }, []);
 
   const activeEscrows = escrows.filter((e) => e.status === "Pending");
 

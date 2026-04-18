@@ -47,6 +47,14 @@ impl EscrowContract {
         env.storage().instance().set(&DataKey::TokenAddress, &token);
     }
 
+    /// Check if the contract has been initialized with a token address
+    pub fn is_initialized(env: Env) -> bool {
+        env.storage()
+            .instance()
+            .get::<DataKey, Address>(&DataKey::TokenAddress)
+            .is_some()
+    }
+
     pub fn create_escrow(
         env: Env,
         client: Address,

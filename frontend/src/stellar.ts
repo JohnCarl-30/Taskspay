@@ -197,6 +197,37 @@ export const getEscrow = async (
   return scValToNative(simResult.result!.retval);
 };
 
+export const isContractInitialized = async (): Promise<boolean> => {
+  const contract = new Contract(CONTRACT_ID);
+  const account = {
+    accountId: () =>
+      "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN",
+    sequenceNumber: () => "0",
+    incrementSequenceNumber: () => {},
+  };
+
+  const tx = new TransactionBuilder(account, {
+    fee: BASE_FEE,
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(contract.call("is_initialized"))
+    .setTimeout(30)
+    .build();
+
+  try {
+    const simResult = await server.simulateTransaction(tx);
+
+    if (SorobanRpc.Api.isSimulationError(simResult)) {
+      throw new Error(`Check failed: ${simResult.error}`);
+    }
+
+    return scValToNative(simResult.result!.retval) as boolean;
+  } catch (error) {
+    console.error("Failed to check contract initialization:", error);
+    return false;
+  }
+};
+
 export const EXPLORER_URL = (contractId: string): string =>
   `https://stellar.expert/explorer/testnet/contract/${contractId}`;
 

@@ -92,6 +92,13 @@ function categorizeError(error: unknown): string {
         messageLower.includes('already completed')) {
       return 'All milestones already completed';
     }
+
+    // Contract initialization errors
+    if (messageLower.includes('unreachablecode') || 
+        messageLower.includes('not initialized') ||
+        messageLower.includes('contract not initialized')) {
+      return 'Contract not initialized. Please initialize the contract from the homepage first.';
+    }
     
     // Network errors
     if (messageLower.includes('simulation failed')) {

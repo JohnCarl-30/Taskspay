@@ -37,12 +37,15 @@ interface EscrowDetailPageProps {
   escrowId: string;
   setPage: (page: string) => void;
   onEscrowUpdated?: () => void;
+  onBalanceUpdated?: () => void;
 }
 
 export default function EscrowDetailPage({
   wallet,
   escrowId,
   setPage,
+  onEscrowUpdated,
+  onBalanceUpdated,
   onEscrowUpdated,
 }: EscrowDetailPageProps) {
   const [escrow, setEscrow] = useState<EscrowDetail | null>(null);
@@ -224,6 +227,10 @@ export default function EscrowDetailPage({
       await refreshEscrow();
     } catch (err) {
       console.error("Failed to refresh escrow:", err);
+    }
+    // Refresh wallet balance after releasing funds
+    if (onBalanceUpdated) {
+      onBalanceUpdated();
     }
     onEscrowUpdated?.();
     setTimeout(() => setSuccessMessage(null), 6000);
