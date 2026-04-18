@@ -46,7 +46,6 @@ export default function EscrowDetailPage({
   setPage,
   onEscrowUpdated,
   onBalanceUpdated,
-  onEscrowUpdated,
 }: EscrowDetailPageProps) {
   const [escrow, setEscrow] = useState<EscrowDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
