@@ -11,6 +11,7 @@ import {
   fetchUserEscrowsCached,
   subscribeToEscrows,
   getCurrentUser,
+  supabase,
   type EscrowRecord,
 } from "./supabase";
 
@@ -24,6 +25,7 @@ export interface Escrow {
   totalMilestones: number;
   tx_hash: string | null;
   on_chain_id: number | null;
+  hasPendingReview: boolean;
 }
 
 interface WalletState {
@@ -37,7 +39,7 @@ function mapStatus(status: EscrowRecord["status"]): Escrow["status"] {
   return "Pending";
 }
 
-function mapEscrow(record: EscrowRecord): Escrow {
+function mapEscrow(record: EscrowRecord, pendingReviewIds?: Set<string>): Escrow {
   const releases = record.payment_releases ?? [];
   const releasedIndices = new Set(releases.map((r) => r.milestone_index));
   const currentIndex = record.milestones.findIndex((_, i) => !releasedIndices.has(i));
@@ -51,6 +53,7 @@ function mapEscrow(record: EscrowRecord): Escrow {
     totalMilestones: record.milestone_count,
     tx_hash: record.tx_hash,
     on_chain_id: record.on_chain_id,
+    hasPendingReview: pendingReviewIds?.has(record.id) ?? false,
   };
 }
 
@@ -89,7 +92,18 @@ export default function App() {
     if (!userId) return;
 
     fetchUserEscrowsCached(userId)
-      .then((records) => setEscrows(records.map(mapEscrow)))
+      .then(async (records) => {
+        const ids = records.map((r) => r.id);
+        const { data: pending } = ids.length
+          ? await supabase
+              .from("work_submissions")
+              .select("escrow_id")
+              .in("escrow_id", ids)
+              .is("client_decision", null)
+          : { data: [] };
+        const pendingIds = new Set((pending ?? []).map((s: { escrow_id: string }) => s.escrow_id));
+        setEscrows(records.map((r) => mapEscrow(r, pendingIds)));
+      })
       .catch(console.error);
 
     const channel = subscribeToEscrows(userId, (event, record) => {

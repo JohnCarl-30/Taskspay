@@ -9,6 +9,7 @@ interface Escrow {
   milestone: number;
   totalMilestones: number;
   tx_hash: string | null;
+  hasPendingReview?: boolean;
 }
 
 interface EscrowCardProps {
@@ -28,7 +29,21 @@ export default function EscrowCard({ escrow, onClick }: EscrowCardProps) {
       }}
     >
       <div className="flex flex-col gap-1">
-        <StatusBadge status={escrow.status} />
+        <div className="flex items-center gap-2">
+          <StatusBadge status={escrow.status} />
+          {escrow.hasPendingReview && (
+            <span
+              className="text-xs uppercase tracking-widest px-2 py-0.5 rounded font-medium"
+              style={{
+                color: "var(--pending)",
+                background: "var(--pending-dim)",
+                border: "0.5px solid var(--pending-border)",
+              }}
+            >
+              Review Pending
+            </span>
+          )}
+        </div>
         <div className="font-display text-sm font-bold mt-1">
           {escrow.title}
         </div>
