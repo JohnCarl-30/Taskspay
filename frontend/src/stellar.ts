@@ -17,7 +17,10 @@ const CONTRACT_ID = import.meta.env.VITE_CONTRACT_ID || "YOUR_CONTRACT_ID";
 const NETWORK_PASSPHRASE = Networks.TESTNET;
 
 // Native XLM token contract address on Soroban testnet
-const XLM_TOKEN_ADDRESS = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4";
+// On Soroban testnet, the native XLM Stellar Asset Contract address
+// This is the standardized address for the native asset on testnet
+const XLM_TOKEN_ADDRESS = import.meta.env.VITE_XLM_TOKEN_ADDRESS || 
+  "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4";
 
 const server = new SorobanRpc.Server(RPC_URL, { allowHttp: false });
 
@@ -247,19 +250,47 @@ export const initializeContract = async (
   sourcePublicKey: string,
   signTransaction: SignTransaction
 ): Promise<SendTransactionResponse> => {
-  // Create Address object from the XLM token contract ID
-  // This properly encodes the contract address for Soroban
-  const tokenAddress = Address.fromString(XLM_TOKEN_ADDRESS);
-  const args = [tokenAddress.toScVal()];
+  try {
+    // Create Address object from the XLM token contract ID
+    // This properly encodes the contract address for Soroban
+    console.log("Initializing contract...");
+    console.log("XLM token address:", XLM_TOKEN_ADDRESS);
+    console.log("Contract ID:", CONTRACT_ID);
+    
+    // Validate that the XLM token address looks like a valid Stellar contract address
+    if (!XLM_TOKEN_ADDRESS.startsWith('C') || XLM_TOKEN_ADDRESS.length !== 56) {
+      throw new Error(
+        `Invalid XLM token address format. Expected 56-character string starting with 'C', got: ${XLM_TOKEN_ADDRESS}`
+      );
+    }
+    
+    const tokenAddress = Address.fromString(XLM_TOKEN_ADDRESS);
+    const args = [tokenAddress.toScVal()];
 
-  const builtTx = await buildContractCall(
-    sourcePublicKey,
-    "initialize",
-    args
-  );
-  const signedXdr = await signTransaction(builtTx.toXDR());
+    const builtTx = await buildContractCall(
+      sourcePublicKey,
+      "initialize",
+      args
+    );
+    const signedXdr = await signTransaction(builtTx.toXDR());
 
-  return await server.sendTransaction(
-    TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE)
-  );
+    const result = await server.sendTransaction(
+      TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE)
+    );
+    
+    console.log("Contract initialized successfully:", result.hash);
+    return result;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Initialize contract error:", message);
+    console.error("XLM Token Address:", XLM_TOKEN_ADDRESS);
+    
+    if (message.includes("invalid encoded string")) {
+      throw new Error(
+        `Invalid XLM token address: ${XLM_TOKEN_ADDRESS}\n\n` +
+        `Make sure VITE_XLM_TOKEN_ADDRESS in .env is a valid Soroban contract address (56 chars, starts with 'C')`
+      );
+    }
+    throw error;
+  }
 };

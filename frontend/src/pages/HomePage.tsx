@@ -103,7 +103,15 @@ export default function HomePage({
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      alert(`Failed to initialize: ${message}`);
+      
+      // Provide helpful guidance for common errors
+      if (message.includes("XLM token address")) {
+        alert(`⚠️ Configuration Issue:\n\n${message}\n\nPlease check your .env file and ensure VITE_XLM_TOKEN_ADDRESS is set to a valid Soroban contract address.`);
+      } else if (message.includes("invalid encoded string")) {
+        alert(`⚠️ Invalid Token Address:\n\nThe XLM token address in .env is not a valid Stellar contract address.\n\nExpected: 56-character string starting with 'C'\n\nPlease update VITE_XLM_TOKEN_ADDRESS in .env`);
+      } else {
+        alert(`Failed to initialize: ${message}`);
+      }
     } finally {
       setInitializing(false);
     }
