@@ -4,12 +4,15 @@ import { upsertUserProfile } from "../supabase";
 interface RoleSelectionPageProps {
   walletAddress: string;
   onRoleSelected: (role: "client" | "freelancer") => void;
+  onConnect?: () => Promise<void>;
 }
 
 export default function RoleSelectionPage({
   walletAddress,
   onRoleSelected,
+  onConnect,
 }: RoleSelectionPageProps) {
+  const [isConnecting, setIsConnecting] = useState(false);
   const [isLoading, setIsLoading] = useState<"client" | "freelancer" | null>(
     null
   );
@@ -35,10 +38,38 @@ export default function RoleSelectionPage({
       <div className="mb-2 font-display text-2xl font-bold tracking-tight">
         How will you use TasksPay?
       </div>
-      <div className="mb-8 text-xs text-[var(--muted)]">
+      <div className="mb-6 text-xs text-[var(--muted)]">
         Choose your role. This is stored per wallet and loads automatically next
         time you connect.
       </div>
+
+      {onConnect && (
+        <div className="mb-6 p-3 rounded-lg border flex items-center justify-between" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+          <div>
+            <div className="text-xs uppercase tracking-widest text-[var(--muted)] mb-0.5">Connected wallet</div>
+            <div className="text-xs font-mono text-[var(--text)]">
+              {walletAddress.slice(0, 8)}...{walletAddress.slice(-8)}
+            </div>
+          </div>
+          <button
+            onClick={async () => {
+              setIsConnecting(true);
+              try { await onConnect(); } finally { setIsConnecting(false); }
+            }}
+            disabled={isConnecting}
+            className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border rounded"
+            style={{
+              background: "transparent",
+              borderColor: "var(--border)",
+              color: "var(--muted)",
+              opacity: isConnecting ? 0.6 : 1,
+              cursor: isConnecting ? "not-allowed" : "pointer",
+            }}
+          >
+            {isConnecting ? "..." : "Switch Wallet"}
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-3">
         <RoleCard

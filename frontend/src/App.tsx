@@ -285,6 +285,7 @@ export default function App() {
           <RoleSelectionPage
             walletAddress={wallet.publicKey}
             onRoleSelected={handleRoleSelected}
+            onConnect={handleConnect}
           />
         )}
 
