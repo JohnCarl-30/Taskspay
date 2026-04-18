@@ -1,0 +1,1 @@
+ALTER TABLE escrows ADD COLUMN IF NOT EXISTS on_chain_id BIGINT;

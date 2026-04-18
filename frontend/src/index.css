@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0a0a;
+  --color-surface: #111111;
+  --color-surface2: #1a1a1a;
+  --color-surface3: #222222;
+  --color-accent: #c8f135;
+  --color-accent2: #a3d420;
+  --color-muted: #888888;
+  --color-muted2: #444444;
+  --color-danger: #ff4d4d;
+  --color-pending: #f5a623;
+
+  --font-family-display: "Syne", sans-serif;
+  --font-family-mono: "DM Mono", monospace;
+}
+
+@layer utilities {
+  .input-field {
+    @apply w-full px-3 py-2 rounded text-sm font-mono bg-[var(--surface2)] border border-[var(--border2)] text-[var(--text)] outline-none;
+  }
+
+  .input-field:focus {
+    @apply border-[var(--border)];
+  }
+}
+
+/* Dark theme (default) */
+:root,
+:root[data-theme="dark"] {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --surface2: #1a1a1a;
+  --surface3: #222222;
+  --border: rgba(255, 255, 255, 0.08);
+  --border2: rgba(255, 255, 255, 0.14);
+  --accent: #c8f135;
+  --accent2: #a3d420;
+  --accent-dim: rgba(200, 241, 53, 0.1);
+  --accent-border: rgba(200, 241, 53, 0.2);
+  --text: #f0f0f0;
+  --muted: #888888;
+  --muted2: #444444;
+  --danger: #ff4d4d;
+  --danger-dim: rgba(255, 77, 77, 0.1);
+  --danger-border: rgba(255, 77, 77, 0.2);
+  --pending: #f5a623;
+  --pending-dim: rgba(245, 166, 35, 0.12);
+  --pending-border: rgba(245, 166, 35, 0.25);
+  --font-display: "Syne", sans-serif;
+  --font-mono: "DM Mono", monospace;
+}
+
+/* Light theme */
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --surface: #f8f8f8;
+  --surface2: #f0f0f0;
+  --surface3: #e8e8e8;
+  --border: rgba(0, 0, 0, 0.08);
+  --border2: rgba(0, 0, 0, 0.14);
+  --accent: #a3d420;
+  --accent2: #8bb818;
+  --accent-dim: rgba(163, 212, 32, 0.1);
+  --accent-border: rgba(163, 212, 32, 0.2);
+  --text: #0a0a0a;
+  --muted: #666666;
+  --muted2: #cccccc;
+  --danger: #dc2626;
+  --danger-dim: rgba(220, 38, 38, 0.1);
+  --danger-border: rgba(220, 38, 38, 0.2);
+  --pending: #ea580c;
+  --pending-dim: rgba(234, 88, 12, 0.12);
+  --pending-border: rgba(234, 88, 12, 0.25);
+  --font-display: "Syne", sans-serif;
+  --font-mono: "DM Mono", monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--font-mono);
+}
+
+input,
+textarea {
+  font-family: var(--font-mono);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted2);
+  border-radius: 2px;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.25s ease forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.2s ease forwards;
+}

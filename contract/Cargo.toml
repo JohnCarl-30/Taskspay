@@ -1,0 +1,30 @@
+[package]
+name = "milestone_escrow"
+version = "0.1.0"
+edition = "2021"
+authors = ["MilestoneEscrow Team"]
+description = "AI-powered freelance escrow smart contract on Stellar Soroban"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = "22.0.0"
+
+[dev-dependencies]
+soroban-sdk = { version = "22.0.0", features = ["testutils"] }
+
+[profile.release]
+opt-level = "z"           # Optimize for size
+overflow-checks = true    # Enable overflow checks in release
+debug = 0                 # No debug info
+strip = "symbols"         # Strip symbols
+debug-assertions = false  # Disable debug assertions
+panic = "abort"           # Abort on panic
+codegen-units = 1         # Better optimization
+lto = true                # Enable Link Time Optimization
+
+[profile.release-with-logs]
+inherits = "release"
+debug-assertions = true
