@@ -1,19 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Topbar from "./components/Topbar";
 import HomePage from "./pages/HomePage";
 import EscrowPage from "./pages/EscrowPage";
 import EscrowDetailPage from "./pages/EscrowDetailPage";
 import HistoryPage from "./pages/HistoryPage";
+import RoleSelectionPage from "./pages/RoleSelectionPage";
+import FreelancerHomePage from "./pages/FreelancerHomePage";
 import { connectWallet, getPublicKey } from "./freighter";
 import { getXLMBalance } from "./stellar";
 import {
   authenticateWithWallet,
   fetchEscrowsByWallet,
+  fetchFreelancerEscrows,
+  getUserProfile,
   subscribeToEscrows,
   getCurrentUser,
   supabase,
   type EscrowRecord,
+  type Milestone,
+  type PaymentRelease,
 } from "./supabase";
+
+export type UserRole = "client" | "freelancer";
 
 export interface Escrow {
   id: string;
@@ -26,6 +34,8 @@ export interface Escrow {
   tx_hash: string | null;
   on_chain_id: number | null;
   hasPendingReview: boolean;
+  milestones: Milestone[];
+  paymentReleases: PaymentRelease[];
 }
 
 interface WalletState {
@@ -42,7 +52,9 @@ function mapStatus(status: EscrowRecord["status"]): Escrow["status"] {
 function mapEscrow(record: EscrowRecord, pendingReviewIds?: Set<string>): Escrow {
   const releases = record.payment_releases ?? [];
   const releasedIndices = new Set(releases.map((r) => r.milestone_index));
-  const currentIndex = record.milestones.findIndex((_, i) => !releasedIndices.has(i));
+  const currentIndex = record.milestones.findIndex(
+    (_, i) => !releasedIndices.has(i)
+  );
   return {
     id: record.id,
     title: record.description,
@@ -54,6 +66,8 @@ function mapEscrow(record: EscrowRecord, pendingReviewIds?: Set<string>): Escrow
     tx_hash: record.tx_hash,
     on_chain_id: record.on_chain_id,
     hasPendingReview: pendingReviewIds?.has(record.id) ?? false,
+    milestones: record.milestones,
+    paymentReleases: releases,
   };
 }
 
@@ -65,6 +79,8 @@ export default function App() {
   const [escrows, setEscrows] = useState<Escrow[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [walletError, setWalletError] = useState<string | null>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
+  const [roleLoading, setRoleLoading] = useState(false);
 
   useEffect(() => {
     getPublicKey()
@@ -88,23 +104,52 @@ export default function App() {
       .catch(console.error);
   }, [wallet?.publicKey]);
 
+  // Fetch role profile after wallet connects (or reset on disconnect).
   useEffect(() => {
-    if (!wallet?.publicKey) return;
-
-    fetchEscrowsByWallet(wallet.publicKey)
-      .then(async (records: EscrowRecord[]) => {
-        const ids = records.map((r: EscrowRecord) => r.id);
-        const { data: pending } = ids.length
-          ? await supabase
-              .from("work_submissions")
-              .select("escrow_id")
-              .in("escrow_id", ids)
-              .is("client_decision", null)
-          : { data: [] };
-        const pendingIds = new Set((pending ?? []).map((s: { escrow_id: string }) => s.escrow_id));
-        setEscrows(records.map((r: EscrowRecord) => mapEscrow(r, pendingIds)));
+    if (!wallet?.publicKey) {
+      setRole(null);
+      return;
+    }
+    setRoleLoading(true);
+    getUserProfile(wallet.publicKey)
+      .then((profile) => {
+        setRole(profile?.role ?? null);
       })
-      .catch(console.error);
+      .catch((err) => {
+        console.error("Failed to load profile:", err);
+        setRole(null);
+      })
+      .finally(() => setRoleLoading(false));
+  }, [wallet?.publicKey]);
+
+  const refreshEscrows = useCallback(async () => {
+    if (!wallet?.publicKey || !role) return;
+    try {
+      const records =
+        role === "freelancer"
+          ? await fetchFreelancerEscrows(wallet.publicKey)
+          : await fetchEscrowsByWallet(wallet.publicKey);
+      const ids = records.map((r) => r.id);
+      const { data: pending } = ids.length
+        ? await supabase
+            .from("work_submissions")
+            .select("escrow_id")
+            .in("escrow_id", ids)
+            .is("client_decision", null)
+        : { data: [] };
+      const pendingIds = new Set(
+        (pending ?? []).map((s: { escrow_id: string }) => s.escrow_id)
+      );
+      setEscrows(records.map((r) => mapEscrow(r, pendingIds)));
+    } catch (err) {
+      console.error(err);
+    }
+  }, [wallet?.publicKey, role]);
+
+  useEffect(() => {
+    if (!wallet?.publicKey || !role) return;
+
+    refreshEscrows();
 
     if (!userId) return;
 
@@ -124,7 +169,7 @@ export default function App() {
     return () => {
       channel.unsubscribe();
     };
-  }, [wallet?.publicKey, userId]);
+  }, [wallet?.publicKey, userId, role, refreshEscrows]);
 
   useEffect(() => {
     if (wallet?.publicKey) {
@@ -154,17 +199,28 @@ export default function App() {
     setPage("escrow-detail");
   };
 
+  const handleRoleSelected = (selectedRole: UserRole) => {
+    setRole(selectedRole);
+  };
+
   const totalLocked = escrows
     .filter((e) => e.status === "Pending")
     .reduce((sum, e) => sum + e.amount, 0);
 
+  const needsRoleSelection = wallet && !roleLoading && role === null;
+  const isReady = wallet && role !== null;
+  // Freelancers cannot create escrows — redirect them home.
+  const effectivePage =
+    role === "freelancer" && page === "escrow" ? "home" : page;
+
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <Topbar
-        page={page}
+        page={effectivePage}
         setPage={setPage}
         wallet={wallet}
         onConnect={handleConnect}
+        role={role}
       />
       {walletError && (
         <div className="px-6 py-2 max-w-[960px] mx-auto">
@@ -202,7 +258,31 @@ export default function App() {
         </div>
       )}
       <main className="px-6 py-7 max-w-[960px] mx-auto">
-        {page === "home" && (
+        {!wallet && (
+          <HomePage
+            wallet={null}
+            balance={balance}
+            escrows={[]}
+            totalLocked={0}
+            setPage={setPage}
+            onViewEscrow={handleViewEscrow}
+          />
+        )}
+
+        {wallet && roleLoading && (
+          <div className="py-20 text-center text-xs text-[var(--muted)]">
+            Loading profile…
+          </div>
+        )}
+
+        {needsRoleSelection && (
+          <RoleSelectionPage
+            walletAddress={wallet.publicKey}
+            onRoleSelected={handleRoleSelected}
+          />
+        )}
+
+        {isReady && effectivePage === "home" && role === "client" && (
           <HomePage
             wallet={wallet}
             balance={balance}
@@ -212,7 +292,18 @@ export default function App() {
             onViewEscrow={handleViewEscrow}
           />
         )}
-        {page === "escrow" && (
+
+        {isReady && effectivePage === "home" && role === "freelancer" && (
+          <FreelancerHomePage
+            wallet={wallet}
+            balance={balance}
+            escrows={escrows}
+            setPage={setPage}
+            onViewEscrow={handleViewEscrow}
+          />
+        )}
+
+        {isReady && effectivePage === "escrow" && role === "client" && (
           <EscrowPage
             wallet={wallet}
             userId={userId}
@@ -220,14 +311,19 @@ export default function App() {
             setPage={setPage}
           />
         )}
-        {page === "escrow-detail" && selectedEscrowId && (
+
+        {isReady && effectivePage === "escrow-detail" && selectedEscrowId && (
           <EscrowDetailPage
             wallet={wallet}
             escrowId={selectedEscrowId}
             setPage={setPage}
+            onEscrowUpdated={refreshEscrows}
           />
         )}
-        {page === "history" && <HistoryPage escrows={escrows} />}
+
+        {isReady && effectivePage === "history" && (
+          <HistoryPage escrows={escrows} />
+        )}
       </main>
     </div>
   );

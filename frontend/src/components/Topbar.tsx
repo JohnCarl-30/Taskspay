@@ -11,9 +11,16 @@ interface TopbarProps {
   setPage: (page: string) => void;
   wallet: WalletState | null;
   onConnect: () => Promise<void>;
+  role: "client" | "freelancer" | null;
 }
 
-export default function Topbar({ page, setPage, wallet, onConnect }: TopbarProps) {
+export default function Topbar({
+  page,
+  setPage,
+  wallet,
+  onConnect,
+  role,
+}: TopbarProps) {
   const [isConnecting, setIsConnecting] = useState(false);
 
   const handleConnect = async () => {
@@ -27,11 +34,22 @@ export default function Topbar({ page, setPage, wallet, onConnect }: TopbarProps
     return addr.slice(0, 8) + "..." + addr.slice(-4);
   };
 
-  const navItems = [
-    { key: "home", label: "Home" },
-    { key: "escrow", label: "New Escrow" },
-    { key: "history", label: "History" },
-  ];
+  const navItems =
+    role === "freelancer"
+      ? [
+          { key: "home", label: "My Work" },
+          { key: "history", label: "History" },
+        ]
+      : [
+          { key: "home", label: "Home" },
+          { key: "escrow", label: "New Escrow" },
+          { key: "history", label: "History" },
+        ];
+
+  const roleBadgeStyle =
+    role === "client"
+      ? { color: "var(--accent)", background: "var(--accent-dim, rgba(200,241,53,0.15))" }
+      : { color: "var(--pending)", background: "var(--pending-dim, rgba(245,166,35,0.15))" };
 
   return (
     <nav className="sticky top-0 z-100 flex items-center justify-between px-6 py-4 border-b bg-[var(--bg)] border-[var(--border)]">
@@ -57,9 +75,17 @@ export default function Topbar({ page, setPage, wallet, onConnect }: TopbarProps
 
       <div className="flex items-center gap-3">
         <ThemeToggle />
-        
+
         {wallet ? (
           <div className="flex items-center gap-3">
+            {role && (
+              <span
+                className="text-xs uppercase tracking-widest px-2 py-0.5 rounded font-medium"
+                style={roleBadgeStyle}
+              >
+                {role}
+              </span>
+            )}
             <div className="text-xs text-[var(--muted)] font-mono">
               {formatAddress(wallet.publicKey)}
             </div>

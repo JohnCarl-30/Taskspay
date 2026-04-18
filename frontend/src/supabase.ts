@@ -110,6 +110,12 @@ export interface EscrowUpdate {
   payment_releases?: PaymentRelease[];
 }
 
+export interface UserProfile {
+  wallet_address: string;
+  role: 'client' | 'freelancer';
+  created_at: string;
+}
+
 // Database schema types for reference
 export interface Database {
   public: {
@@ -128,6 +134,11 @@ export interface Database {
         Row: DeliveryVerification;
         Insert: DeliveryVerificationInsert;
         Update: Partial<Omit<DeliveryVerification, 'id' | 'created_at'>>;
+      };
+      user_profiles: {
+        Row: UserProfile;
+        Insert: Omit<UserProfile, 'created_at'>;
+        Update: Pick<UserProfile, 'role'>;
       };
     };
   };
@@ -581,6 +592,73 @@ export const updateEscrowPaymentReleases = async (
       throw error;
     }
   });
+};
+
+/**
+ * Fetch a user profile by wallet address. Returns null if not yet created
+ * (first-time user — triggers role selection UI).
+ */
+export const getUserProfile = async (
+  walletAddress: string
+): Promise<UserProfile | null> => {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('wallet_address', walletAddress)
+    .maybeSingle();
+  if (error) throw new Error(`Failed to fetch profile: ${error.message}`);
+  return data;
+};
+
+/**
+ * Create or update the user profile (used during role selection).
+ */
+export const upsertUserProfile = async (
+  walletAddress: string,
+  role: 'client' | 'freelancer'
+): Promise<UserProfile> => {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .upsert(
+      { wallet_address: walletAddress, role },
+      { onConflict: 'wallet_address' }
+    )
+    .select()
+    .single();
+  if (error) throw new Error(`Failed to save profile: ${error.message}`);
+  if (!data) throw new Error('Upsert returned no data');
+  return data;
+};
+
+/**
+ * Fetch all escrows where the given wallet is the assigned freelancer.
+ * Requires migration 009 RLS so freelancers can read their assigned escrows.
+ */
+export const fetchFreelancerEscrows = async (
+  walletAddress: string
+): Promise<EscrowRecord[]> => {
+  return retryWithBackoff(async () => {
+    const { data, error } = await supabase
+      .from('escrows')
+      .select('*')
+      .eq('freelancer_address', walletAddress)
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(`Failed to fetch freelancer escrows: ${error.message}`);
+    return data || [];
+  });
+};
+
+/**
+ * Fetch a single escrow by id (used to refresh after mutations).
+ */
+export const fetchEscrowById = async (id: string): Promise<EscrowRecord | null> => {
+  const { data, error } = await supabase
+    .from('escrows')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw new Error(`Failed to fetch escrow: ${error.message}`);
+  return data;
 };
 
 export const updateWorkSubmission = async (

@@ -36,12 +36,14 @@ interface EscrowDetailPageProps {
   wallet: WalletState | null;
   escrowId: string;
   setPage: (page: string) => void;
+  onEscrowUpdated?: () => void;
 }
 
 export default function EscrowDetailPage({
   wallet,
   escrowId,
   setPage,
+  onEscrowUpdated,
 }: EscrowDetailPageProps) {
   const [escrow, setEscrow] = useState<EscrowDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -198,6 +200,7 @@ export default function EscrowDetailPage({
       const updated = await updateWorkSubmission(latestSubmission.id, { client_decision: "rejected" });
       setLatestSubmission(updated);
       setSuccessMessage("Work rejected. Freelancer will be notified to resubmit.");
+      onEscrowUpdated?.();
       setTimeout(() => setSuccessMessage(null), 6000);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Failed to reject submission.");
@@ -222,6 +225,7 @@ export default function EscrowDetailPage({
     } catch (err) {
       console.error("Failed to refresh escrow:", err);
     }
+    onEscrowUpdated?.();
     setTimeout(() => setSuccessMessage(null), 6000);
   };
 
