@@ -226,9 +226,10 @@ export default function SubmissionForm({
             console.log('Images uploaded:', imageUrls);
           }
         } catch (error) {
-          console.error('Image upload error:', error);
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          console.error('Image upload error:', errorMsg);
           // Don't fail the submission if images fail - submission is still created
-          alert('Work submitted but some images failed to upload. You can try again.');
+          alert(`Work submitted but images failed to upload:\n${errorMsg}\n\nYou can try again.`);
         }
       }
 

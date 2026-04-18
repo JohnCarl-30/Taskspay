@@ -199,3 +199,28 @@ export const EXPLORER_URL = (contractId: string): string =>
 
 export const TX_EXPLORER_URL = (hash: string): string =>
   `https://stellar.expert/explorer/testnet/tx/${hash}`;
+
+// Testnet native XLM token contract address
+const XLM_TOKEN_ADDRESS = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2QDGDG6";
+
+/**
+ * Initialize the contract with the XLM token address
+ * This must be called once before any escrows can transfer funds
+ */
+export const initializeContract = async (
+  sourcePublicKey: string,
+  signTransaction: SignTransaction
+): Promise<SendTransactionResponse> => {
+  const args = [new Address(XLM_TOKEN_ADDRESS).toScVal()];
+
+  const builtTx = await buildContractCall(
+    sourcePublicKey,
+    "initialize",
+    args
+  );
+  const signedXdr = await signTransaction(builtTx.toXDR());
+
+  return await server.sendTransaction(
+    TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE)
+  );
+};

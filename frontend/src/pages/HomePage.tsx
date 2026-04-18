@@ -1,5 +1,7 @@
+import { useState } from "react";
 import EscrowCard from "../components/EscrowCard";
-import { TX_EXPLORER_URL } from "../stellar";
+import { TX_EXPLORER_URL, initializeContract } from "../stellar";
+import { signTransaction } from "../freighter";
 
 interface Escrow {
   id: string;
@@ -34,7 +36,29 @@ export default function HomePage({
   setPage,
   onViewEscrow,
 }: HomePageProps) {
+  const [initializing, setInitializing] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+
   const activeEscrows = escrows.filter((e) => e.status === "Pending");
+
+  const handleInitializeContract = async () => {
+    if (!wallet) {
+      alert("Connect your wallet first");
+      return;
+    }
+
+    setInitializing(true);
+    try {
+      const result = await initializeContract(wallet.publicKey, signTransaction);
+      alert(`✓ Contract initialized!\nTransaction: ${result.hash}`);
+      setInitialized(true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      alert(`Failed to initialize: ${message}`);
+    } finally {
+      setInitializing(false);
+    }
+  };
 
   const activity = escrows.slice(0, 5).map((e) => ({
     text: `Escrow initialized. ${e.amount.toFixed(2)} XLM locked. ${e.title}.`,
@@ -85,6 +109,24 @@ export default function HomePage({
           icon="→"
           onClick={() => setPage("history")}
         />
+        {!initialized && wallet && (
+          <button
+            onClick={handleInitializeContract}
+            disabled={initializing}
+            className="col-span-2 p-3 rounded-lg border text-left hover:opacity-90 transition-opacity disabled:opacity-50"
+            style={{
+              background: "var(--surface)",
+              borderColor: "var(--border)",
+            }}
+          >
+            <div className="font-display text-sm font-bold uppercase tracking-wider mb-1">
+              {initializing ? "Initializing..." : "Initialize Contract"}
+            </div>
+            <div className="text-xs text-[var(--muted)]">
+              Enable XLM transfers (one-time setup)
+            </div>
+          </button>
+        )}
       </div>
 
       <SectionHeader
