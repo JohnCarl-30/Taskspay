@@ -14,6 +14,8 @@ interface TopbarProps {
   role: "client" | "freelancer" | null;
   onSwitchRole?: () => void;
   onDisconnect?: () => void;
+  balance?: string;
+  onRefreshBalance?: () => void;
 }
 
 export default function Topbar({
@@ -24,10 +26,13 @@ export default function Topbar({
   role,
   onSwitchRole,
   onDisconnect,
+  balance,
+  onRefreshBalance,
 }: TopbarProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [confirmSwitch, setConfirmSwitch] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,6 +66,14 @@ export default function Topbar({
     setConfirmSwitch(false);
     if (onDisconnect) {
       onDisconnect();
+    }
+  };
+
+  const handleRefreshBalance = async () => {
+    if (onRefreshBalance && !isRefreshing) {
+      setIsRefreshing(true);
+      onRefreshBalance();
+      setTimeout(() => setIsRefreshing(false), 1000);
     }
   };
 
@@ -113,6 +126,32 @@ export default function Topbar({
 
         {wallet ? (
           <div className="flex items-center gap-3 relative">
+            {/* Balance Display with Refresh Button */}
+            {balance && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+                <span className="text-xs font-mono font-medium" style={{ color: "var(--text)" }}>
+                  {balance} XLM
+                </span>
+                {onRefreshBalance && (
+                  <button
+                    onClick={handleRefreshBalance}
+                    disabled={isRefreshing}
+                    className="text-xs border-0 bg-transparent cursor-pointer transition-all duration-150 hover:opacity-70 p-0"
+                    style={{ 
+                      color: "var(--accent)",
+                      opacity: isRefreshing ? 0.5 : 1,
+                      transform: isRefreshing ? 'rotate(360deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.5s ease-in-out, opacity 0.2s',
+                    }}
+                    title="Refresh balance"
+                    aria-label="Refresh wallet balance"
+                  >
+                    ↻
+                  </button>
+                )}
+              </div>
+            )}
+            
             {role && onSwitchRole && (
               <button
                 onClick={onSwitchRole}

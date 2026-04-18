@@ -183,6 +183,17 @@ export default function App() {
     }
   }, [wallet]);
 
+  // Auto-refresh balance every 10 seconds when wallet is connected
+  useEffect(() => {
+    if (!wallet?.publicKey) return;
+
+    const intervalId = setInterval(() => {
+      getXLMBalance(wallet.publicKey).then(setBalance);
+    }, 10000); // Refresh every 10 seconds
+
+    return () => clearInterval(intervalId);
+  }, [wallet?.publicKey]);
+
   const refreshBalance = useCallback(() => {
     if (wallet?.publicKey) {
       getXLMBalance(wallet.publicKey).then(setBalance);
@@ -249,6 +260,8 @@ export default function App() {
         role={role}
         onSwitchRole={handleSwitchRole}
         onDisconnect={handleDisconnect}
+        balance={balance}
+        onRefreshBalance={refreshBalance}
       />
       {walletError && (
         <div className="px-6 py-2 max-w-[960px] mx-auto">
