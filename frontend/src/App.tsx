@@ -8,7 +8,7 @@ import { connectWallet, getPublicKey } from "./freighter";
 import { getXLMBalance } from "./stellar";
 import {
   authenticateWithWallet,
-  fetchUserEscrowsCached,
+  fetchEscrowsByWallet,
   subscribeToEscrows,
   getCurrentUser,
   supabase,
@@ -89,11 +89,11 @@ export default function App() {
   }, [wallet?.publicKey]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!wallet?.publicKey) return;
 
-    fetchUserEscrowsCached(userId)
-      .then(async (records) => {
-        const ids = records.map((r) => r.id);
+    fetchEscrowsByWallet(wallet.publicKey)
+      .then(async (records: EscrowRecord[]) => {
+        const ids = records.map((r: EscrowRecord) => r.id);
         const { data: pending } = ids.length
           ? await supabase
               .from("work_submissions")
@@ -102,9 +102,11 @@ export default function App() {
               .is("client_decision", null)
           : { data: [] };
         const pendingIds = new Set((pending ?? []).map((s: { escrow_id: string }) => s.escrow_id));
-        setEscrows(records.map((r) => mapEscrow(r, pendingIds)));
+        setEscrows(records.map((r: EscrowRecord) => mapEscrow(r, pendingIds)));
       })
       .catch(console.error);
+
+    if (!userId) return;
 
     const channel = subscribeToEscrows(userId, (event, record) => {
       setEscrows((prev) => {
@@ -122,7 +124,7 @@ export default function App() {
     return () => {
       channel.unsubscribe();
     };
-  }, [userId]);
+  }, [wallet?.publicKey, userId]);
 
   useEffect(() => {
     if (wallet?.publicKey) {

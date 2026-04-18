@@ -403,9 +403,25 @@ export const fetchUserEscrowsCached = async (userId: string): Promise<EscrowReco
 };
 
 /**
+ * Fetch all escrow records where the client wallet_address matches.
+ * This is the stable identifier across Supabase session resets.
+ */
+export const fetchEscrowsByWallet = async (walletAddress: string): Promise<EscrowRecord[]> => {
+  return retryWithBackoff(async () => {
+    const { data, error } = await supabase
+      .from('escrows')
+      .select('*')
+      .eq('wallet_address', walletAddress)
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(`Failed to fetch escrows: ${error.message}`);
+    return data || [];
+  });
+};
+
+/**
  * Invalidate the escrow cache for a specific user
  * Should be called after INSERT, UPDATE, or DELETE operations
- * 
+ *
  * @param userId - The UUID of the user whose cache should be invalidated
  */
 export const invalidateEscrowCache = (userId: string): void => {
