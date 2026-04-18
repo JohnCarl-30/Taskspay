@@ -93,24 +93,38 @@ export default function HomePage({
     setInitializing(true);
     localStorage.removeItem("contractInitialized");
 
+    // Step 1: submit the initialize tx — errors here are fatal and shown to the user.
     try {
       const result = await initializeContract(wallet.publicKey, signTransaction);
       setInitSuccessHash(result.hash);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const isInit = await isContractInitialized();
-      setInitialized(isInit);
-      if (isInit) localStorage.setItem("contractInitialized", "true");
     } catch (error) {
-      if (error instanceof XlmTokenSetupError) {
+      const isSetupError =
+        error instanceof XlmTokenSetupError ||
+        (error instanceof Error && error.name === "XlmTokenSetupError");
+      if (isSetupError) {
         setInitError({
           title: "Contract setup needed",
-          body: error.message,
+          body: (error as Error).message,
           command: SETUP_HELP_COMMAND,
         });
       } else {
         const message = error instanceof Error ? error.message : String(error);
         setInitError({ title: "Initialize failed", body: message });
       }
+      setInitializing(false);
+      return;
+    }
+
+    // Step 2: verify on-chain status — non-fatal; init tx already landed.
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const isInit = await isContractInitialized();
+      setInitialized(isInit);
+      if (isInit) localStorage.setItem("contractInitialized", "true");
+    } catch {
+      // Verification check failed but the tx succeeded — treat as initialized.
+      setInitialized(true);
+      localStorage.setItem("contractInitialized", "true");
     } finally {
       setInitializing(false);
     }

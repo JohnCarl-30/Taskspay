@@ -210,36 +210,31 @@ export const getEscrow = async (
 };
 
 export const isContractInitialized = async (): Promise<boolean> => {
-  const contract = new Contract(CONTRACT_ID);
-  const account = {
-    accountId: () =>
-      "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN",
-    sequenceNumber: () => "0",
-    incrementSequenceNumber: () => {},
-  };
-
-  const tx = new TransactionBuilder(account, {
-    fee: BASE_FEE,
-    networkPassphrase: NETWORK_PASSPHRASE,
-  })
-    .addOperation(contract.call("is_initialized"))
-    .setTimeout(30)
-    .build();
-
   try {
+    const contract = new Contract(CONTRACT_ID);
+    const account = {
+      accountId: () =>
+        "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN",
+      sequenceNumber: () => "0",
+      incrementSequenceNumber: () => {},
+    };
+
+    const tx = new TransactionBuilder(account, {
+      fee: BASE_FEE,
+      networkPassphrase: NETWORK_PASSPHRASE,
+    })
+      .addOperation(contract.call("is_initialized"))
+      .setTimeout(30)
+      .build();
+
     const simResult = await server.simulateTransaction(tx);
 
     if (SorobanRpc.Api.isSimulationError(simResult)) {
-      console.warn("Contract initialization check failed:", simResult.error);
       return false;
     }
 
-    const result = scValToNative(simResult.result!.retval) as boolean;
-    console.log("Contract initialized:", result);
-    return result;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.warn("Failed to check contract initialization:", message);
+    return scValToNative(simResult.result!.retval) as boolean;
+  } catch {
     return false;
   }
 };
