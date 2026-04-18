@@ -8,6 +8,7 @@ import RoleSelectionPage from "./pages/RoleSelectionPage";
 import FreelancerHomePage from "./pages/FreelancerHomePage";
 import { connectWallet, getPublicKey } from "./freighter";
 import { getXLMBalance } from "./stellar";
+import { ensureStorageBucket } from "./storage";
 import {
   authenticateWithWallet,
   fetchEscrowsByWallet,
@@ -93,6 +94,11 @@ export default function App() {
         if (user) setUserId(user.id);
       })
       .catch(() => {});
+    
+    // Initialize storage bucket
+    ensureStorageBucket().catch((err) => {
+      console.warn('Failed to initialize storage bucket:', err);
+    });
   }, []);
 
   useEffect(() => {

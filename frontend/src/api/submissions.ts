@@ -140,7 +140,7 @@ export async function submitWork(params: {
   submitterAddress: string;
   description: string;
   urls: string[];
-  images?: string[];
+  images?: string[]; // Image URLs (stored separately in Supabase Storage)
 }): Promise<WorkSubmission> {
   const { escrowId, milestoneIndex, submitterAddress, description, urls, images = [] } = params;
   
