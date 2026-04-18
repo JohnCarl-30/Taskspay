@@ -97,6 +97,9 @@ export default function HomePage({
     try {
       const result = await initializeContract(wallet.publicKey, signTransaction);
       setInitSuccessHash(result.hash);
+      // Trust the landed tx: mark initialized immediately so the button disappears.
+      setInitialized(true);
+      localStorage.setItem("contractInitialized", "true");
     } catch (error) {
       const isSetupError =
         error instanceof XlmTokenSetupError ||
@@ -115,19 +118,7 @@ export default function HomePage({
       return;
     }
 
-    // Step 2: verify on-chain status — non-fatal; init tx already landed.
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const isInit = await isContractInitialized();
-      setInitialized(isInit);
-      if (isInit) localStorage.setItem("contractInitialized", "true");
-    } catch {
-      // Verification check failed but the tx succeeded — treat as initialized.
-      setInitialized(true);
-      localStorage.setItem("contractInitialized", "true");
-    } finally {
-      setInitializing(false);
-    }
+    setInitializing(false);
   };
 
   const activity = escrows.slice(0, 5).map((e) => ({
