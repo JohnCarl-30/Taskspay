@@ -167,11 +167,14 @@ export const supabase = createClient(
  */
 export const authenticateWithWallet = async (walletAddress: string) => {
   try {
-    // Reuse existing session if one exists — prevents creating a new user_id
-    // on every call which would break RLS policies on existing escrows
     const { data: existing } = await supabase.auth.getSession();
     if (existing.session?.user) {
-      return { user: existing.session.user, session: existing.session };
+      const sessionWallet = existing.session.user.user_metadata?.wallet_address;
+      if (sessionWallet === walletAddress) {
+        return { user: existing.session.user, session: existing.session };
+      }
+      // Wallet switched — sign out so the new session carries the correct address
+      await supabase.auth.signOut();
     }
 
     const { data, error } = await supabase.auth.signInAnonymously({
