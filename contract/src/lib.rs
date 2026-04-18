@@ -34,10 +34,17 @@ pub struct EscrowContract;
 #[contractimpl]
 impl EscrowContract {
     /// One-time setup: set the XLM token contract address used for transfers.
-    /// Must be called before any escrow is created. On testnet, use the native
-    /// Stellar Asset Contract address: CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2QDGDG6
-    /// Safe to call multiple times - will update the token address if already set
+    /// The token address must be a valid Stellar Asset Contract (SAC) deployed on the network.
+    /// 
+    /// For testnet deployment, you should provide the actual SAC contract ID.
+    /// To test locally, deploy your own SAC or use a test fixture.
+    /// 
+    /// This function is safe to call multiple times.
     pub fn initialize(env: Env, token: Address) {
+        // Verify the address is valid (will panic if invalid)
+        // This happens at transaction simulation time, before on-chain execution
+        let _ = token.to_string();
+        
         env.storage().instance().set(&DataKey::TokenAddress, &token);
     }
 

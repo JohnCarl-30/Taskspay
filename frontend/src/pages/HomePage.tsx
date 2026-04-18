@@ -1,7 +1,17 @@
 import { useState, useEffect } from "react";
 import EscrowCard from "../components/EscrowCard";
-import { TX_EXPLORER_URL, initializeContract, isContractInitialized } from "../stellar";
+import {
+  TX_EXPLORER_URL,
+  EXPLORER_URL,
+  initializeContract,
+  isContractInitialized,
+  SETUP_HELP_COMMAND,
+  XlmTokenSetupError,
+} from "../stellar";
 import { signTransaction } from "../freighter";
+
+const CONTRACT_ID =
+  (import.meta.env.VITE_CONTRACT_ID as string | undefined) ?? "";
 
 interface Escrow {
   id: string;
@@ -39,13 +49,17 @@ export default function HomePage({
   const [initializing, setInitializing] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [checkingInit, setCheckingInit] = useState(true);
+  const [initError, setInitError] = useState<{
+    title: string;
+    body: string;
+    command?: string;
+  } | null>(null);
+  const [initSuccessHash, setInitSuccessHash] = useState<string | null>(null);
 
-  // Check contract initialization status on component mount
   useEffect(() => {
     const checkInitialization = async () => {
       setCheckingInit(true);
       try {
-        // Check if we've already cached this result (only cache true, not false)
         const cached = localStorage.getItem("contractInitialized");
         if (cached === "true") {
           setInitialized(true);
@@ -55,13 +69,10 @@ export default function HomePage({
 
         const isInit = await isContractInitialized();
         setInitialized(isInit);
-        
-        // Cache true result only (temporary - expires on page refresh)
+
         if (isInit) {
           localStorage.setItem("contractInitialized", "true");
         }
-        
-        console.log("Contract initialization status:", isInit);
       } catch (error) {
         console.error("Failed to check contract initialization:", error);
         setInitialized(false);
@@ -76,41 +87,29 @@ export default function HomePage({
   const activeEscrows = escrows.filter((e) => e.status === "Pending");
 
   const handleInitializeContract = async () => {
-    if (!wallet) {
-      alert("Connect your wallet first");
-      return;
-    }
-
+    if (!wallet) return;
+    setInitError(null);
+    setInitSuccessHash(null);
     setInitializing(true);
-    // Clear the cache since we're about to reinitialize
     localStorage.removeItem("contractInitialized");
-    
+
     try {
       const result = await initializeContract(wallet.publicKey, signTransaction);
-      alert(`✓ Contract initialized!\nTransaction: ${result.hash}`);
-      
-      // Wait a moment then re-check contract status to confirm
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      setInitSuccessHash(result.hash);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       const isInit = await isContractInitialized();
       setInitialized(isInit);
-      
-      if (isInit) {
-        localStorage.setItem("contractInitialized", "true");
-      }
-      
-      if (!isInit) {
-        console.warn("Contract status verification failed - may still be initializing on-chain");
-      }
+      if (isInit) localStorage.setItem("contractInitialized", "true");
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      
-      // Provide helpful guidance for common errors
-      if (message.includes("XLM token address")) {
-        alert(`⚠️ Configuration Issue:\n\n${message}\n\nPlease check your .env file and ensure VITE_XLM_TOKEN_ADDRESS is set to a valid Soroban contract address.`);
-      } else if (message.includes("invalid encoded string")) {
-        alert(`⚠️ Invalid Token Address:\n\nThe XLM token address in .env is not a valid Stellar contract address.\n\nExpected: 56-character string starting with 'C'\n\nPlease update VITE_XLM_TOKEN_ADDRESS in .env`);
+      if (error instanceof XlmTokenSetupError) {
+        setInitError({
+          title: "Contract setup needed",
+          body: error.message,
+          command: SETUP_HELP_COMMAND,
+        });
       } else {
-        alert(`Failed to initialize: ${message}`);
+        const message = error instanceof Error ? error.message : String(error);
+        setInitError({ title: "Initialize failed", body: message });
       }
     } finally {
       setInitializing(false);
@@ -124,14 +123,60 @@ export default function HomePage({
     tx_hash: e.tx_hash,
   }));
 
+  if (!wallet) {
+    return <HeroLanding />;
+  }
+
   return (
     <div className="fade-in">
       <div className="mb-1.5 text-xs uppercase tracking-widest text-[var(--muted2)]">
         Overview
       </div>
       <div className="mb-6 font-display text-2xl font-bold tracking-tight">
-        {wallet ? "Welcome back" : "Welcome, Connect Wallet"}
+        Welcome back
       </div>
+
+      {initError && (
+        <SetupHelpCard
+          title={initError.title}
+          body={initError.body}
+          command={initError.command}
+          onDismiss={() => setInitError(null)}
+        />
+      )}
+
+      {initSuccessHash && (
+        <div
+          className="glass p-4 mb-6 animate-fade-in"
+          style={{ borderColor: "var(--accent-border)" }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div
+                className="text-xs uppercase tracking-widest mb-1"
+                style={{ color: "var(--accent)" }}
+              >
+                ✓ Contract initialized
+              </div>
+              <a
+                href={TX_EXPLORER_URL(initSuccessHash)}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-[var(--accent)] hover:underline"
+              >
+                TX: {initSuccessHash.slice(0, 10)}…{initSuccessHash.slice(-6)} ↗
+              </a>
+            </div>
+            <button
+              onClick={() => setInitSuccessHash(null)}
+              className="text-[var(--muted)] bg-transparent border-0"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-3 mb-6">
         <StatCard
@@ -170,17 +215,24 @@ export default function HomePage({
           <button
             onClick={handleInitializeContract}
             disabled={initializing}
-            className="col-span-2 p-3 rounded-lg border text-left hover:opacity-90 transition-opacity disabled:opacity-50"
-            style={{
-              background: "var(--surface)",
-              borderColor: "var(--border)",
-            }}
+            className="glass col-span-2 p-4 text-left disabled:opacity-60"
           >
-            <div className="font-display text-sm font-bold uppercase tracking-wider mb-1">
-              {initializing ? "Initializing..." : "Initialize Contract"}
-            </div>
-            <div className="text-xs text-[var(--muted)]">
-              Enable XLM transfers (one-time setup)
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="font-display text-sm font-bold uppercase tracking-wider mb-1">
+                  {initializing ? "Initializing…" : "Initialize Contract"}
+                </div>
+                <div className="text-xs text-[var(--muted)]">
+                  One-time setup to enable XLM transfers. Needs the SAC ID in
+                  your .env first.
+                </div>
+              </div>
+              <div
+                className="font-display text-xl font-bold"
+                style={{ color: "var(--accent)" }}
+              >
+                ⚡
+              </div>
             </div>
           </button>
         )}
@@ -194,9 +246,9 @@ export default function HomePage({
         <EmptyState label="No active escrows. Create one to get started." />
       ) : (
         activeEscrows.map((e) => (
-          <EscrowCard 
-            key={e.id} 
-            escrow={e} 
+          <EscrowCard
+            key={e.id}
+            escrow={e}
             onClick={() => onViewEscrow(e.id)}
           />
         ))
@@ -256,6 +308,215 @@ export default function HomePage({
   );
 }
 
+function HeroLanding() {
+  return (
+    <div className="fade-in">
+      <section className="py-14 md:py-20">
+        <div className="inline-flex items-center gap-2 mb-6 px-3 py-1 rounded-full glass text-[10px] uppercase tracking-widest">
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ background: "var(--accent)" }}
+          />
+          Live on Stellar Testnet
+        </div>
+
+        <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] mb-5">
+          Trustless freelance escrow,
+          <br />
+          <span className="gradient-text">settled on Stellar.</span>
+        </h1>
+
+        <p className="text-sm md:text-base text-[var(--muted)] max-w-xl mb-8 leading-relaxed">
+          AI-generated milestones. On-chain settlement in ~5 seconds. Sub-cent
+          fees. Clients lock XLM in a Soroban smart contract and release per
+          milestone — no intermediaries, no chargebacks.
+        </p>
+
+        <div className="flex flex-wrap items-center gap-3 mb-10">
+          <div
+            className="px-5 py-3 rounded-lg font-display text-xs font-bold uppercase tracking-wider"
+            style={{
+              background: "var(--accent)",
+              color: "#0a0a0a",
+            }}
+          >
+            Connect Freighter · top right ↗
+          </div>
+          {CONTRACT_ID && (
+            <a
+              href={EXPLORER_URL(CONTRACT_ID)}
+              target="_blank"
+              rel="noreferrer"
+              className="px-5 py-3 rounded-lg glass font-display text-xs font-bold uppercase tracking-wider no-underline"
+            >
+              View Live Contract ↗
+            </a>
+          )}
+        </div>
+
+        {CONTRACT_ID && (
+          <div className="text-[10px] text-[var(--muted2)] font-mono break-all">
+            Contract: {CONTRACT_ID}
+          </div>
+        )}
+      </section>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-10">
+        <FeatureCard
+          icon="✦"
+          title="AI Milestones"
+          desc="GPT-4o-mini splits any project description into 3–5 milestones with clear deliverables and fair payment splits."
+        />
+        <FeatureCard
+          icon="⟐"
+          title="Trustless Release"
+          desc="XLM sits in a Soroban contract. Funds move to the freelancer automatically when the client releases a milestone."
+        />
+        <FeatureCard
+          icon="⚡"
+          title="Fast & Cheap"
+          desc="Stellar fees under $0.01 per transaction. Finality in 3–5 seconds. No chargebacks, ever."
+        />
+      </div>
+
+      <div className="glass p-6 md:p-8">
+        <div className="text-xs uppercase tracking-widest text-[var(--muted)] mb-3">
+          How it works
+        </div>
+        <ol className="space-y-3 text-sm">
+          {[
+            "Client connects Freighter and describes the project.",
+            "AI proposes milestones with percentage splits; client adjusts.",
+            "Client creates the escrow — XLM is locked in the smart contract.",
+            "Freelancer submits work; AI flags gaps before the client reviews.",
+            "Client approves → contract pays the freelancer automatically, per milestone.",
+          ].map((step, i) => (
+            <li key={i} className="flex gap-3">
+              <span
+                className="font-display text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: "var(--accent-dim)",
+                  color: "var(--accent)",
+                  border: "1px solid var(--accent-border)",
+                }}
+              >
+                {i + 1}
+              </span>
+              <span className="text-[var(--text)]">{step}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  );
+}
+
+interface FeatureCardProps {
+  icon: string;
+  title: string;
+  desc: string;
+}
+
+function FeatureCard({ icon, title, desc }: FeatureCardProps) {
+  return (
+    <div className="glass p-5">
+      <div
+        className="font-display text-2xl mb-3"
+        style={{ color: "var(--accent)" }}
+      >
+        {icon}
+      </div>
+      <div className="font-display text-sm font-bold uppercase tracking-wider mb-2">
+        {title}
+      </div>
+      <div className="text-xs text-[var(--muted)] leading-relaxed">{desc}</div>
+    </div>
+  );
+}
+
+interface SetupHelpCardProps {
+  title: string;
+  body: string;
+  command?: string;
+  onDismiss: () => void;
+}
+
+function SetupHelpCard({ title, body, command, onDismiss }: SetupHelpCardProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!command) return;
+    try {
+      await navigator.clipboard.writeText(command);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard blocked — ignore
+    }
+  };
+
+  return (
+    <div
+      className="glass p-5 mb-6 animate-fade-in"
+      style={{
+        borderColor: "var(--pending-border)",
+        background: "var(--pending-dim)",
+      }}
+    >
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div
+          className="font-display text-sm font-bold uppercase tracking-wider"
+          style={{ color: "var(--pending)" }}
+        >
+          ⚠ {title}
+        </div>
+        <button
+          onClick={onDismiss}
+          className="text-[var(--muted)] bg-transparent border-0 text-xs"
+          aria-label="Dismiss"
+        >
+          ✕
+        </button>
+      </div>
+      <pre className="text-xs whitespace-pre-wrap text-[var(--text)] leading-relaxed mb-3 font-mono">
+        {body}
+      </pre>
+      {command && (
+        <div className="flex items-center gap-2">
+          <code
+            className="flex-1 px-3 py-2 rounded font-mono text-xs"
+            style={{
+              background: "var(--surface2)",
+              border: "0.5px solid var(--border2)",
+            }}
+          >
+            {command}
+          </code>
+          <button
+            onClick={handleCopy}
+            className="px-3 py-2 rounded font-display text-xs font-bold uppercase tracking-wider"
+            style={{
+              background: "var(--accent)",
+              color: "#0a0a0a",
+              border: 0,
+            }}
+          >
+            {copied ? "Copied ✓" : "Copy"}
+          </button>
+        </div>
+      )}
+      <a
+        href="https://github.com/your-repo/taskspay/blob/main/XLM_TOKEN_SETUP.md"
+        target="_blank"
+        rel="noreferrer"
+        className="inline-block mt-3 text-xs text-[var(--accent)] hover:underline"
+      >
+        Full setup guide →
+      </a>
+    </div>
+  );
+}
+
 interface StatCardProps {
   label: string;
   value: string | number;
@@ -264,38 +525,48 @@ interface StatCardProps {
 }
 
 function StatCard({ label, value, sub, accent }: StatCardProps) {
-  return (
-    <div
-      className="p-4 rounded-lg border"
-      style={{
-        background: accent ? "var(--accent)" : "var(--surface)",
-        borderColor: accent ? "var(--accent)" : "var(--border)",
-      }}
-    >
+  if (accent) {
+    return (
       <div
-        className="text-xs uppercase tracking-widest mb-2"
+        className="p-4 rounded-[14px]"
         style={{
-          color: accent ? "rgba(0,0,0,0.5)" : "var(--muted)",
+          background:
+            "linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%)",
+          boxShadow: "var(--glow)",
+          transition: "transform 0.2s ease",
         }}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.transform = "translateY(-2px)")
+        }
+        onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
       >
+        <div
+          className="text-xs uppercase tracking-widest mb-2"
+          style={{ color: "rgba(0,0,0,0.55)" }}
+        >
+          {label}
+        </div>
+        <div
+          className="font-display text-[26px] font-bold tracking-tight leading-none"
+          style={{ color: "#0a0a0a" }}
+        >
+          {value}
+        </div>
+        <div className="text-xs mt-1" style={{ color: "rgba(0,0,0,0.5)" }}>
+          {sub}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="glass p-4">
+      <div className="text-xs uppercase tracking-widest mb-2 text-[var(--muted)]">
         {label}
       </div>
-      <div
-        className="font-display text-[26px] font-bold tracking-tight leading-none"
-        style={{
-          color: accent ? "#0a0a0a" : "var(--text)",
-        }}
-      >
+      <div className="font-display text-[26px] font-bold tracking-tight leading-none">
         {value}
       </div>
-      <div
-        className="text-xs mt-1"
-        style={{
-          color: accent ? "rgba(0,0,0,0.4)" : "var(--muted)",
-        }}
-      >
-        {sub}
-      </div>
+      <div className="text-xs mt-1 text-[var(--muted)]">{sub}</div>
     </div>
   );
 }
@@ -310,13 +581,9 @@ interface QuickCardProps {
 
 function QuickCard({ title, desc, icon, onClick, highlight }: QuickCardProps) {
   return (
-    <div
+    <button
       onClick={onClick}
-      className="p-4 rounded-lg border cursor-pointer transition-all duration-150 flex items-center justify-between"
-      style={{
-        background: "var(--surface)",
-        borderColor: "var(--border)",
-      }}
+      className="glass p-4 text-left flex items-center justify-between"
     >
       <div>
         <div className="font-display text-xs font-bold uppercase tracking-wider">
@@ -326,13 +593,11 @@ function QuickCard({ title, desc, icon, onClick, highlight }: QuickCardProps) {
       </div>
       <div
         className="font-display text-xl font-bold"
-        style={{
-          color: highlight ? "var(--accent)" : "var(--muted)",
-        }}
+        style={{ color: highlight ? "var(--accent)" : "var(--muted)" }}
       >
         {icon}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -344,10 +609,7 @@ interface SectionHeaderProps {
 
 function SectionHeader({ title, onViewAll, style }: SectionHeaderProps) {
   return (
-    <div
-      className="flex items-center justify-between mb-3"
-      style={style}
-    >
+    <div className="flex items-center justify-between mb-3" style={style}>
       <div className="font-display text-sm font-bold uppercase tracking-wider">
         {title}
       </div>
@@ -369,8 +631,6 @@ interface EmptyStateProps {
 
 function EmptyState({ label }: EmptyStateProps) {
   return (
-    <div className="py-6 text-center text-xs text-[var(--muted)]">
-      {label}
-    </div>
+    <div className="py-6 text-center text-xs text-[var(--muted)]">{label}</div>
   );
 }

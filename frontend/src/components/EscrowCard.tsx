@@ -17,72 +17,105 @@ interface EscrowCardProps {
   onClick?: () => void;
 }
 
+const accentFor = (status: Escrow["status"]): string => {
+  if (status === "Released") return "var(--accent)";
+  if (status === "Refunded") return "var(--danger)";
+  return "var(--pending)";
+};
+
 export default function EscrowCard({ escrow, onClick }: EscrowCardProps) {
+  const progress =
+    escrow.totalMilestones === 0
+      ? 0
+      : Math.min(
+          100,
+          Math.round(
+            ((escrow.status === "Released"
+              ? escrow.totalMilestones
+              : escrow.milestone - 1) /
+              escrow.totalMilestones) *
+              100
+          )
+        );
+
+  const shortAddress =
+    escrow.address.length > 14
+      ? `${escrow.address.slice(0, 6)}…${escrow.address.slice(-6)}`
+      : escrow.address;
+
   return (
     <button
       onClick={onClick}
       disabled={!onClick}
-      className="w-full p-4 mb-2 rounded-lg border transition-all duration-150 flex items-center justify-between animate-fade-in hover:shadow-md disabled:hover:shadow-none focus:outline-none focus:ring-2 focus:ring-offset-0"
-      style={{
-        background: "var(--surface)",
-        borderColor: onClick ? "var(--border)" : "var(--border)",
-        cursor: onClick ? "pointer" : "default",
-        ...(onClick && {
-          '--hover-border': 'var(--accent)',
-          '--hover-bg': 'var(--accent-dim)',
-        } as React.CSSProperties),
-      }}
-      onMouseEnter={(e) => {
-        if (onClick) {
-          const el = e.currentTarget;
-          el.style.borderColor = 'var(--accent)';
-          el.style.backgroundColor = 'var(--accent-dim)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget;
-        el.style.borderColor = 'var(--border)';
-        el.style.backgroundColor = 'var(--surface)';
-      }}
+      className="glass w-full p-4 mb-3 text-left relative overflow-hidden animate-fade-in disabled:cursor-default"
+      style={{ cursor: onClick ? "pointer" : "default" }}
     >
-      <div className="flex flex-col gap-1 text-left flex-1">
-        <div className="flex items-center gap-2">
-          <StatusBadge status={escrow.status} />
-          {escrow.hasPendingReview && (
-            <span
-              className="text-xs uppercase tracking-widest px-2 py-0.5 rounded font-medium"
-              style={{
-                color: "var(--pending)",
-                background: "var(--pending-dim)",
-                border: "0.5px solid var(--pending-border)",
-              }}
-            >
-              Review Pending
-            </span>
-          )}
-        </div>
-        <div className="font-display text-sm font-bold mt-1">
-          {escrow.title}
-        </div>
-        <div className="text-xs text-[var(--muted)]">{escrow.address}</div>
-      </div>
+      <span
+        aria-hidden
+        className="absolute left-0 top-0 bottom-0 w-1"
+        style={{ background: accentFor(escrow.status) }}
+      />
 
-      <div className="text-right flex items-center gap-3">
-        <div>
-          <div className="text-xs text-[var(--muted)] uppercase tracking-wider mb-0.5">
+      <div className="flex items-center justify-between gap-4 pl-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <StatusBadge status={escrow.status} />
+            {escrow.hasPendingReview && (
+              <span
+                className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded font-medium"
+                style={{
+                  color: "var(--pending)",
+                  background: "var(--pending-dim)",
+                  border: "0.5px solid var(--pending-border)",
+                }}
+              >
+                Review Pending
+              </span>
+            )}
+          </div>
+          <div className="font-display text-sm font-bold truncate">
+            {escrow.title}
+          </div>
+          <div className="text-[11px] font-mono text-[var(--muted)] mt-0.5 truncate">
+            {shortAddress}
+          </div>
+
+          <div className="mt-3 flex items-center gap-2">
+            <div
+              className="flex-1 h-1 rounded-full overflow-hidden"
+              style={{ background: "var(--surface2)" }}
+            >
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{
+                  width: `${progress}%`,
+                  background: accentFor(escrow.status),
+                }}
+              />
+            </div>
+            <div className="text-[10px] uppercase tracking-widest text-[var(--muted)] whitespace-nowrap">
+              {escrow.status === "Released"
+                ? "Completed"
+                : `${escrow.milestone - 1}/${escrow.totalMilestones}`}
+            </div>
+          </div>
+        </div>
+
+        <div className="text-right flex-shrink-0">
+          <div className="text-[10px] text-[var(--muted)] uppercase tracking-widest mb-0.5">
             Amount
           </div>
-          <div className="font-display text-base font-bold">
-            {escrow.amount} XLM
+          <div className="font-display text-lg font-bold leading-none">
+            {escrow.amount}
           </div>
-          <div className="text-xs text-[var(--muted)] mt-0.5">
-            {escrow.status === "Released"
-              ? "Completed"
-              : `Milestone ${escrow.milestone}/${escrow.totalMilestones}`}
-          </div>
+          <div className="text-[10px] text-[var(--muted)] mt-1">XLM</div>
         </div>
+
         {onClick && (
-          <div className="text-[var(--accent)] ml-2 flex-shrink-0">
+          <div
+            className="ml-1 flex-shrink-0 font-display text-lg"
+            style={{ color: "var(--accent)" }}
+          >
             →
           </div>
         )}

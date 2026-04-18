@@ -16,11 +16,20 @@ const RPC_URL =
 const CONTRACT_ID = import.meta.env.VITE_CONTRACT_ID || "YOUR_CONTRACT_ID";
 const NETWORK_PASSPHRASE = Networks.TESTNET;
 
-// Native XLM token contract address on Soroban testnet
-// This is the Stellar Asset Contract (SAC) address for native XLM on testnet
-// Source: Documented in contract/src/lib.rs initialize() function
-const XLM_TOKEN_ADDRESS = import.meta.env.VITE_XLM_TOKEN_ADDRESS || 
-  "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2QDGDG6";
+// Stellar Asset Contract (SAC) ID for native XLM on the target network.
+// Must be wrapped on-chain first via `bash scripts/wrap-native-xlm.sh`.
+// No fallback: an empty/missing value triggers a setup-help error surface.
+const XLM_TOKEN_ADDRESS: string =
+  (import.meta.env.VITE_XLM_TOKEN_ADDRESS as string | undefined) ?? "";
+
+export const SETUP_HELP_COMMAND = "bash scripts/wrap-native-xlm.sh";
+
+export class XlmTokenSetupError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "XlmTokenSetupError";
+  }
+}
 
 const server = new SorobanRpc.Server(RPC_URL, { allowHttp: false });
 
@@ -250,47 +259,49 @@ export const initializeContract = async (
   sourcePublicKey: string,
   signTransaction: SignTransaction
 ): Promise<SendTransactionResponse> => {
+  if (!XLM_TOKEN_ADDRESS) {
+    throw new XlmTokenSetupError(
+      `VITE_XLM_TOKEN_ADDRESS is not set in frontend/.env.\n\n` +
+        `Run this once to wrap the native XLM asset as a SAC and get the ID:\n` +
+        `  ${SETUP_HELP_COMMAND}\n\n` +
+        `Then paste the printed ID into frontend/.env as VITE_XLM_TOKEN_ADDRESS and restart the dev server.`
+    );
+  }
+
+  if (!XLM_TOKEN_ADDRESS.startsWith("C") || XLM_TOKEN_ADDRESS.length !== 56) {
+    throw new XlmTokenSetupError(
+      `VITE_XLM_TOKEN_ADDRESS does not look like a Soroban contract ID.\n\n` +
+        `Expected a 56-character string starting with 'C'. Got: ${XLM_TOKEN_ADDRESS}\n\n` +
+        `Re-run ${SETUP_HELP_COMMAND} and copy the output.`
+    );
+  }
+
   try {
-    // Create Address object from the XLM token contract ID
-    // This properly encodes the contract address for Soroban
-    console.log("Initializing contract...");
-    console.log("XLM token address:", XLM_TOKEN_ADDRESS);
-    console.log("Contract ID:", CONTRACT_ID);
-    
-    // Validate that the XLM token address starts with 'C' (contract address)
-    if (!XLM_TOKEN_ADDRESS.startsWith('C')) {
-      throw new Error(
-        `Invalid XLM token address format. Expected string starting with 'C', got: ${XLM_TOKEN_ADDRESS}`
-      );
-    }
-    
     const tokenAddress = Address.fromString(XLM_TOKEN_ADDRESS);
     const args = [tokenAddress.toScVal()];
 
-    const builtTx = await buildContractCall(
-      sourcePublicKey,
-      "initialize",
-      args
-    );
+    const builtTx = await buildContractCall(sourcePublicKey, "initialize", args);
     const signedXdr = await signTransaction(builtTx.toXDR());
 
-    const result = await server.sendTransaction(
+    return await server.sendTransaction(
       TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE)
     );
-    
-    console.log("Contract initialized successfully:", result.hash);
-    return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error("Initialize contract error:", message);
-    console.error("XLM Token Address:", XLM_TOKEN_ADDRESS);
-    
-    if (message.includes("invalid encoded string")) {
-      throw new Error(
-        `Invalid XLM token address: ${XLM_TOKEN_ADDRESS}\n\n` +
-        `Make sure VITE_XLM_TOKEN_ADDRESS in .env is a valid Soroban contract address (56 chars, starts with 'C')`
+
+    if (
+      message.includes("Unsupported address type") ||
+      message.includes("HostError") ||
+      message.includes("invalid encoded string")
+    ) {
+      throw new XlmTokenSetupError(
+        `Soroban rejected the XLM token address: ${XLM_TOKEN_ADDRESS}\n\n` +
+          `This usually means the native XLM SAC has not been wrapped on this network yet.\n` +
+          `Run: ${SETUP_HELP_COMMAND}\n` +
+          `Paste the output into frontend/.env as VITE_XLM_TOKEN_ADDRESS, then restart the dev server.`
       );
     }
+
     throw error;
   }
 };
