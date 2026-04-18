@@ -208,6 +208,15 @@ export default function App() {
     setPage("home");
   };
 
+  const handleDisconnect = () => {
+    setWallet(null);
+    setRole(null);
+    setUserId(null);
+    setEscrows([]);
+    setBalance("0.00");
+    setPage("home");
+  };
+
   const totalLocked = escrows
     .filter((e) => e.status === "Pending")
     .reduce((sum, e) => sum + e.amount, 0);
@@ -227,6 +236,7 @@ export default function App() {
         onConnect={handleConnect}
         role={role}
         onSwitchRole={handleSwitchRole}
+        onDisconnect={handleDisconnect}
       />
       {walletError && (
         <div className="px-6 py-2 max-w-[960px] mx-auto">
