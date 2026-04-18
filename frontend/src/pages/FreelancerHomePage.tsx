@@ -1,4 +1,3 @@
-import { useState } from "react";
 import EscrowCard from "../components/EscrowCard";
 import { TX_EXPLORER_URL } from "../stellar";
 import type { Escrow } from "../App";
@@ -30,24 +29,12 @@ export default function FreelancerHomePage({
   setPage,
   onViewEscrow,
 }: FreelancerHomePageProps) {
-  const [withdrawing, setWithdrawing] = useState(false);
-  
   const activeEscrows = escrows.filter((e) => e.status === "Pending");
   const pendingReviews = escrows.filter((e) => e.hasPendingReview);
   const totalEarned = escrows.reduce(
     (sum, e) => sum + computeEarnings(e),
     0
   );
-
-  const handleWithdraw = async () => {
-    if (totalEarned <= 0) {
-      alert("No earnings to withdraw");
-      return;
-    }
-    setWithdrawing(true);
-    alert(`✓ Your earned XLM (${totalEarned.toFixed(2)} XLM) is ready in your wallet!\n\nYou can view your transaction history in the Explorer.`);
-    setWithdrawing(false);
-  };
 
   const paidMilestones = escrows
     .flatMap((e) =>
@@ -106,25 +93,6 @@ export default function FreelancerHomePage({
           icon="→"
           onClick={() => setPage("history")}
         />
-        {totalEarned > 0 && (
-          <button
-            onClick={handleWithdraw}
-            disabled={withdrawing}
-            className="w-full p-4 rounded-lg border text-left hover:opacity-90 transition-opacity disabled:opacity-50"
-            style={{
-              background: "var(--accent)",
-              borderColor: "var(--accent)",
-              color: "#0a0a0a",
-            }}
-          >
-            <div className="font-display text-sm font-bold uppercase tracking-wider mb-1">
-              {withdrawing ? "Processing..." : "Withdraw Earnings"}
-            </div>
-            <div className="text-xs" style={{ color: "rgba(0,0,0,0.6)" }}>
-              Claim {totalEarned.toFixed(2)} XLM to your wallet
-            </div>
-          </button>
-        )}
       </div>
 
       <SectionHeader
