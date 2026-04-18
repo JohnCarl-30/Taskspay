@@ -14,6 +14,7 @@ import { SorobanRpc } from "@stellar/stellar-sdk";
 const RPC_URL =
   import.meta.env.VITE_STELLAR_RPC_URL || "https://soroban-testnet.stellar.org";
 const CONTRACT_ID = import.meta.env.VITE_CONTRACT_ID || "YOUR_CONTRACT_ID";
+const XLM_TOKEN_ADDRESS = import.meta.env.VITE_XLM_TOKEN_ADDRESS || "YOUR_XLM_TOKEN_ADDRESS";
 const NETWORK_PASSPHRASE = Networks.TESTNET;
 
 const server = new SorobanRpc.Server(RPC_URL, { allowHttp: false });
@@ -200,18 +201,19 @@ export const EXPLORER_URL = (contractId: string): string =>
 export const TX_EXPLORER_URL = (hash: string): string =>
   `https://stellar.expert/explorer/testnet/tx/${hash}`;
 
-// Testnet native XLM token contract address
-const XLM_TOKEN_ADDRESS = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2QDGDG6";
-
 /**
  * Initialize the contract with the XLM token address
  * This must be called once before any escrows can transfer funds
+ * XLM_TOKEN_ADDRESS is read from VITE_XLM_TOKEN_ADDRESS environment variable
  */
 export const initializeContract = async (
   sourcePublicKey: string,
   signTransaction: SignTransaction
 ): Promise<SendTransactionResponse> => {
-  const args = [new Address(XLM_TOKEN_ADDRESS).toScVal()];
+  // Create Address object from the XLM token contract ID
+  // This properly encodes the contract address for Soroban
+  const tokenAddress = Address.fromString(XLM_TOKEN_ADDRESS);
+  const args = [tokenAddress.toScVal()];
 
   const builtTx = await buildContractCall(
     sourcePublicKey,
