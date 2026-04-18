@@ -49,7 +49,7 @@ export default function HomePage({
         Overview
       </div>
       <div className="mb-6 font-display text-2xl font-bold tracking-tight">
-        Welcome, {wallet ? "Freelancer" : "Connect Wallet"}
+        {wallet ? "Welcome back" : "Welcome, Connect Wallet"}
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-6">
