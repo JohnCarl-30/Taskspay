@@ -517,19 +517,19 @@ export default function EscrowDetailPage({
                           {/* Client override note when AI is not fully positive */}
                           {latestVerification && latestVerification.recommendation !== "approve" && (
                             <div
-                              className="p-3 rounded-lg mb-4 flex items-start gap-2"
+                              className="p-4 rounded-lg mb-4 flex items-start gap-3 border"
                               style={{
-                                background: "var(--surface2)",
-                                border: "0.5px solid var(--border)",
+                                background: "rgba(245, 166, 35, 0.08)",
+                                borderColor: "rgba(245, 166, 35, 0.3)",
                               }}
                             >
-                              <span className="text-sm flex-shrink-0" style={{ color: "var(--accent)" }}>★</span>
+                              <div className="text-lg flex-shrink-0 mt-0.5">ℹ️</div>
                               <div>
-                                <div className="text-xs font-medium mb-0.5" style={{ color: "var(--text)" }}>
+                                <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "var(--pending)" }}>
                                   You have final say
                                 </div>
-                                <div className="text-xs" style={{ color: "var(--muted)" }}>
-                                  AI is advisory only. If you've reviewed the work and are satisfied, you can approve regardless of the AI score.
+                                <div className="text-xs leading-relaxed" style={{ color: "var(--text)" }}>
+                                  AI is advisory only. If you've reviewed the work and are satisfied, <strong>you can approve regardless of the AI score.</strong>
                                 </div>
                               </div>
                             </div>
