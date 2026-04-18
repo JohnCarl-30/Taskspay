@@ -257,10 +257,10 @@ export const initializeContract = async (
     console.log("XLM token address:", XLM_TOKEN_ADDRESS);
     console.log("Contract ID:", CONTRACT_ID);
     
-    // Validate that the XLM token address looks like a valid Stellar contract address
-    if (!XLM_TOKEN_ADDRESS.startsWith('C') || XLM_TOKEN_ADDRESS.length !== 56) {
+    // Validate that the XLM token address starts with 'C' (contract address)
+    if (!XLM_TOKEN_ADDRESS.startsWith('C')) {
       throw new Error(
-        `Invalid XLM token address format. Expected 56-character string starting with 'C', got: ${XLM_TOKEN_ADDRESS}`
+        `Invalid XLM token address format. Expected string starting with 'C', got: ${XLM_TOKEN_ADDRESS}`
       );
     }
     
