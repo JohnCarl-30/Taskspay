@@ -285,11 +285,6 @@ export default function EscrowDetailPage({
       </div>
       <div className="mb-2 font-display text-2xl font-bold tracking-tight">{escrow.title}</div>
 
-      {/* DEBUG: Show on_chain_id status */}
-      <div className="mb-4 text-xs text-[var(--muted)]">
-        On-Chain ID: {escrow.on_chain_id === null ? "❌ NULL (not deployed)" : escrow.on_chain_id === undefined ? "❌ UNDEFINED" : `✓ ${escrow.on_chain_id}`}
-      </div>
-
       {/* Role badge */}
       <div className="mb-4 flex items-center gap-2">
         {isClient && (
