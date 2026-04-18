@@ -17,10 +17,10 @@ const CONTRACT_ID = import.meta.env.VITE_CONTRACT_ID || "YOUR_CONTRACT_ID";
 const NETWORK_PASSPHRASE = Networks.TESTNET;
 
 // Native XLM token contract address on Soroban testnet
-// On Soroban testnet, the native XLM Stellar Asset Contract address
-// This is the standardized address for the native asset on testnet
+// This is the Stellar Asset Contract (SAC) address for native XLM on testnet
+// Source: Documented in contract/src/lib.rs initialize() function
 const XLM_TOKEN_ADDRESS = import.meta.env.VITE_XLM_TOKEN_ADDRESS || 
-  "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4";
+  "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2QDGDG6";
 
 const server = new SorobanRpc.Server(RPC_URL, { allowHttp: false });
 
