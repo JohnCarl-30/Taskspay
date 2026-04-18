@@ -97,7 +97,11 @@ function categorizeError(error: unknown): string {
     if (messageLower.includes('unreachablecode') || 
         messageLower.includes('not initialized') ||
         messageLower.includes('contract not initialized')) {
-      return 'Contract not initialized. Please initialize the contract from the homepage first.';
+      return 'Contract not initialized. Click "Initialize Contract" on the homepage, or check your VITE_XLM_TOKEN_ADDRESS in .env.';
+    }
+    
+    if (messageLower.includes('unsupported address type')) {
+      return 'Invalid XLM token address in .env. Must be a 56-character Soroban contract address starting with "C".';
     }
     
     // Network errors
