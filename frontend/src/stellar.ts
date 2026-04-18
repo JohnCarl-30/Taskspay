@@ -14,8 +14,10 @@ import { SorobanRpc } from "@stellar/stellar-sdk";
 const RPC_URL =
   import.meta.env.VITE_STELLAR_RPC_URL || "https://soroban-testnet.stellar.org";
 const CONTRACT_ID = import.meta.env.VITE_CONTRACT_ID || "YOUR_CONTRACT_ID";
-const XLM_TOKEN_ADDRESS = import.meta.env.VITE_XLM_TOKEN_ADDRESS || "YOUR_XLM_TOKEN_ADDRESS";
 const NETWORK_PASSPHRASE = Networks.TESTNET;
+
+// Native XLM token contract address on Soroban testnet
+const XLM_TOKEN_ADDRESS = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4";
 
 const server = new SorobanRpc.Server(RPC_URL, { allowHttp: false });
 
