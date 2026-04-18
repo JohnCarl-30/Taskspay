@@ -68,6 +68,7 @@ export default function EscrowPage({
 
     setTxStatus("signing");
     let txHash: string | null = null;
+    let onChainId: number | null = null;
     try {
       const result = await createEscrow(
         wallet.publicKey,
@@ -77,6 +78,16 @@ export default function EscrowPage({
         signTransaction
       );
       txHash = result.hash;
+      onChainId = result.onChainId;
+      
+      // Validation: ensure onChainId is valid
+      if (!onChainId || onChainId <= 0) {
+        console.warn("Invalid onChainId:", onChainId);
+      }
+      
+      // Logging: capture onChainId for debugging
+      console.log("Captured onChainId from blockchain:", onChainId);
+      
       setTxHash(result.hash);
       setTxStatus("submitted");
     } catch (e) {
@@ -108,8 +119,12 @@ export default function EscrowPage({
           milestone_count: milestones.length,
           milestones: milestones,
         });
-        await updateEscrow(record.id, { tx_hash: txHash, status: "active" });
-        onAddEscrow({ ...record, tx_hash: txHash, status: "active" });
+        await updateEscrow(record.id, { 
+          tx_hash: txHash, 
+          status: "active",
+          on_chain_id: onChainId 
+        });
+        onAddEscrow({ ...record, tx_hash: txHash, status: "active", on_chain_id: onChainId });
       } catch (e) {
         console.error("Database save error:", e);
         // Show inline warning without hiding blockchain success

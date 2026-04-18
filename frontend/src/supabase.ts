@@ -110,6 +110,7 @@ export interface EscrowUpdate {
   status?: 'pending' | 'active' | 'completed' | 'refunded';
   verification_result?: VerificationResult;
   payment_releases?: PaymentRelease[];
+  on_chain_id?: number | null;
 }
 
 export interface UserProfile {
