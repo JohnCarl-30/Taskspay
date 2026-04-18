@@ -514,8 +514,8 @@ export default function EscrowDetailPage({
                               : "Review the submission above and approve to release funds or reject to request changes."}
                           </div>
 
-                          {/* Client override note when AI is not fully positive */}
-                          {latestVerification && latestVerification.recommendation !== "approve" && (
+                          {/* Client override note - always show to remind client they have final say */}
+                          {(!latestVerification || latestVerification.recommendation !== "approve") && (
                             <div
                               className="p-4 rounded-lg mb-4 flex items-start gap-3 border"
                               style={{
