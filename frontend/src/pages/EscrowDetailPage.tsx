@@ -3,7 +3,7 @@ import SubmissionForm from "../components/SubmissionForm";
 import VerificationReport from "../components/VerificationReport";
 import SubmissionHistory from "../components/SubmissionHistory";
 import ReleaseFundsButton from "../components/ReleaseFundsButton";
-import { supabase } from "../supabase";
+import { supabase, updateWorkSubmission } from "../supabase";
 import { fetchMilestoneSubmissions } from "../api/submissions";
 import { fetchVerificationCached, verifyWorkSubmission } from "../api/verifications";
 import type { WorkSubmission, DeliveryVerification } from "../supabase";
@@ -51,6 +51,7 @@ export default function EscrowDetailPage({
   const [latestVerification, setLatestVerification] = useState<DeliveryVerification | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   useEffect(() => {
     const fetchEscrow = async () => {
@@ -204,16 +205,16 @@ export default function EscrowDetailPage({
           xlm: milestone.xlm,
         });
         setLatestVerification(verification);
-        setSuccessMessage("Work submitted! AI verification complete.");
+        setSuccessMessage("Work submitted! AI analysis ready — review below and make your decision.");
       } catch (err) {
         console.error("Verification failed:", err);
-        setSuccessMessage("Work submitted! Verification unavailable.");
+        setSuccessMessage("Work submitted! Review the submission and accept or reject.");
       } finally {
         setIsVerifying(false);
       }
     }
 
-    setTimeout(() => setSuccessMessage(null), 5000);
+    setTimeout(() => setSuccessMessage(null), 6000);
   };
 
   const handleSubmitError = (error: Error) => {
@@ -222,7 +223,31 @@ export default function EscrowDetailPage({
     setSuccessMessage(null);
   };
 
+  const handleReject = async () => {
+    if (!latestSubmission) return;
+    setIsRejecting(true);
+    try {
+      const updated = await updateWorkSubmission(latestSubmission.id, { client_decision: "rejected" });
+      setLatestSubmission(updated);
+      setSuccessMessage("Work rejected. Freelancer can review feedback and resubmit.");
+      setTimeout(() => setSuccessMessage(null), 6000);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Failed to reject submission.");
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
   const handleReleaseFundsSuccess = async () => {
+    // Mark the submission as accepted
+    if (latestSubmission) {
+      try {
+        const updated = await updateWorkSubmission(latestSubmission.id, { client_decision: "accepted" });
+        setLatestSubmission(updated);
+      } catch (err) {
+        console.error("Failed to mark submission as accepted:", err);
+      }
+    }
     setSuccessMessage("Payment released successfully!");
     setErrorMessage(null);
     
@@ -490,20 +515,79 @@ export default function EscrowDetailPage({
                 </div>
               )}
 
-              {/* Release Funds Button - only show for active milestone when wallet connected and on_chain_id exists */}
-              {wallet && escrow.on_chain_id && (
-                <div className="mt-4">
-                  <ReleaseFundsButton
-                    escrowId={escrow.id}
-                    onChainEscrowId={escrow.on_chain_id}
-                    milestoneIndex={escrow.currentMilestoneIndex}
-                    milestoneName={activeMilestone.name}
-                    milestoneAmount={activeMilestone.xlm}
-                    clientAddress={wallet.publicKey}
-                    verification={latestVerification}
-                    onSuccess={handleReleaseFundsSuccess}
-                    onError={handleReleaseFundsError}
-                  />
+              {/* Client decision — show when there's a pending submission */}
+              {wallet && escrow.on_chain_id &&
+                latestSubmission &&
+                latestSubmission.client_decision === null &&
+                !isVerifying && (
+                <div className="mt-4 space-y-3">
+                  <div
+                    className="p-4 rounded-lg border"
+                    style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                  >
+                    <div className="font-display text-sm font-bold uppercase tracking-wider mb-3 pb-3 border-b border-[var(--border)]">
+                      Your Decision
+                    </div>
+                    <div className="text-xs text-[var(--muted)] mb-4">
+                      Review the submission{latestVerification ? " and AI analysis" : ""} above, then accept to release{" "}
+                      <strong className="text-[var(--accent)]">{activeMilestone.xlm.toFixed(2)} XLM</strong>{" "}
+                      or reject to request changes.
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <ReleaseFundsButton
+                          escrowId={escrow.id}
+                          onChainEscrowId={escrow.on_chain_id}
+                          milestoneIndex={escrow.currentMilestoneIndex}
+                          milestoneName={activeMilestone.name}
+                          milestoneAmount={activeMilestone.xlm}
+                          clientAddress={wallet.publicKey}
+                          verification={latestVerification}
+                          onSuccess={handleReleaseFundsSuccess}
+                          onError={handleReleaseFundsError}
+                        />
+                      </div>
+                      <button
+                        onClick={handleReject}
+                        disabled={isRejecting}
+                        className="px-5 py-3 text-xs font-display font-bold uppercase tracking-wider rounded cursor-pointer self-start"
+                        style={{
+                          background: "var(--danger-dim)",
+                          color: "var(--danger)",
+                          border: "0.5px solid var(--danger)",
+                          opacity: isRejecting ? 0.5 : 1,
+                          cursor: isRejecting ? "not-allowed" : "pointer",
+                          minHeight: "44px",
+                        }}
+                      >
+                        {isRejecting ? "..." : "Reject"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Rejected badge */}
+              {latestSubmission?.client_decision === "rejected" && (
+                <div
+                  className="mt-4 p-3 rounded-lg animate-fade-in"
+                  style={{ background: "var(--danger-dim)", border: "0.5px solid var(--danger)" }}
+                >
+                  <div className="text-xs font-medium text-[var(--danger)]">
+                    ✗ Work rejected — freelancer can review and resubmit.
+                  </div>
+                </div>
+              )}
+
+              {/* Accepted badge */}
+              {latestSubmission?.client_decision === "accepted" && (
+                <div
+                  className="mt-4 p-3 rounded-lg animate-fade-in"
+                  style={{ background: "var(--accent-dim)", border: "0.5px solid var(--accent-border)" }}
+                >
+                  <div className="text-xs font-medium text-[var(--accent)]">
+                    ✓ Work accepted — funds released for this milestone.
+                  </div>
                 </div>
               )}
 

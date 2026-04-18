@@ -23,6 +23,7 @@ export interface Escrow {
   milestone: number;
   totalMilestones: number;
   tx_hash: string | null;
+  on_chain_id: number | null;
 }
 
 interface WalletState {
@@ -37,15 +38,19 @@ function mapStatus(status: EscrowRecord["status"]): Escrow["status"] {
 }
 
 function mapEscrow(record: EscrowRecord): Escrow {
+  const releases = record.payment_releases ?? [];
+  const releasedIndices = new Set(releases.map((r) => r.milestone_index));
+  const currentIndex = record.milestones.findIndex((_, i) => !releasedIndices.has(i));
   return {
     id: record.id,
     title: record.description,
     address: record.freelancer_address,
     amount: record.amount,
     status: mapStatus(record.status),
-    milestone: 1,
+    milestone: currentIndex === -1 ? record.milestone_count : currentIndex + 1,
     totalMilestones: record.milestone_count,
     tx_hash: record.tx_hash,
+    on_chain_id: record.on_chain_id,
   };
 }
 

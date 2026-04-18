@@ -25,6 +25,7 @@ export interface WorkSubmission {
   submitter_address: string;
   description: string;
   urls: string[];
+  client_decision: 'accepted' | 'rejected' | null;
 }
 
 export interface WorkSubmissionInsert {
@@ -62,6 +63,15 @@ export interface SubmissionWithVerification {
   verification: DeliveryVerification | null;
 }
 
+export type PaymentRelease = {
+  milestone_index: number;
+  released_at: string;
+  tx_hash?: string;
+  verification_id?: string;
+  score?: number;
+  recommendation?: 'approve' | 'request_changes' | 'reject';
+};
+
 // Escrow record types
 export interface EscrowRecord {
   id: string;
@@ -78,6 +88,7 @@ export interface EscrowRecord {
   status: 'pending' | 'active' | 'completed' | 'refunded';
   verification_result: VerificationResult | null;
   on_chain_id: number | null;
+  payment_releases: PaymentRelease[] | null;
 }
 
 export interface EscrowInsert {
@@ -96,13 +107,7 @@ export interface EscrowUpdate {
   tx_hash?: string;
   status?: 'pending' | 'active' | 'completed' | 'refunded';
   verification_result?: VerificationResult;
-  payment_releases?: Array<{
-    milestone_index: number;
-    released_at: string;
-    verification_id?: string;
-    score?: number;
-    recommendation?: 'approve' | 'request_changes' | 'reject';
-  }>;
+  payment_releases?: PaymentRelease[];
 }
 
 // Database schema types for reference
@@ -479,6 +484,7 @@ export const insertEscrowOptimistic = async (
     status: 'pending',
     verification_result: escrow.verification_result || null,
     on_chain_id: escrow.on_chain_id ?? null,
+    payment_releases: null,
   };
   
   // Update UI immediately
@@ -496,19 +502,6 @@ export const insertEscrowOptimistic = async (
     throw error;
   }
 };
-
-/**
- * Payment release record interface
- * Represents a single payment release in the audit trail
- */
-export interface PaymentRelease {
-  milestone_index: number;
-  released_at: string;
-  tx_hash: string;
-  verification_id?: string;
-  score?: number;
-  recommendation?: 'approve' | 'request_changes' | 'reject';
-}
 
 /**
  * Update escrow payment_releases array with a new payment release record
@@ -568,8 +561,23 @@ export const updateEscrowPaymentReleases = async (
           throw new Error('Permission denied: unable to update payment releases');
         }
       }
-      
+
       throw error;
     }
   });
+};
+
+export const updateWorkSubmission = async (
+  id: string,
+  updates: { client_decision: 'accepted' | 'rejected' }
+): Promise<WorkSubmission> => {
+  const { data, error } = await supabase
+    .from('work_submissions')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw new Error(`Failed to update submission: ${error.message}`);
+  if (!data) throw new Error('Update returned no data');
+  return data;
 };

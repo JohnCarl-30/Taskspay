@@ -169,7 +169,27 @@ function SubmissionCard({
           </span>
         </div>
 
-        {/* Score and Recommendation */}
+        {/* Client Decision Badge */}
+        {submission.client_decision && (
+          <div className="mb-2">
+            <span
+              className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest px-2.5 py-1 rounded font-medium"
+              style={{
+                color: submission.client_decision === "accepted" ? "var(--accent)" : "var(--danger)",
+                background: submission.client_decision === "accepted" ? "var(--accent-dim)" : "var(--danger-dim)",
+                border: `0.5px solid ${submission.client_decision === "accepted" ? "var(--accent-border)" : "var(--danger)"}`,
+              }}
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full inline-block"
+                style={{ background: submission.client_decision === "accepted" ? "var(--accent)" : "var(--danger)" }}
+              />
+              Client: {submission.client_decision === "accepted" ? "Accepted" : "Rejected"}
+            </span>
+          </div>
+        )}
+
+        {/* Score and AI Recommendation */}
         {verification ? (
           <div className="flex items-center gap-3">
             {/* Score Badge */}
@@ -184,7 +204,7 @@ function SubmissionCard({
               {verification.score}
             </div>
 
-            {/* Recommendation Badge */}
+            {/* AI Recommendation Badge */}
             <span
               className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest px-2.5 py-1 rounded font-medium"
               style={{
@@ -197,7 +217,7 @@ function SubmissionCard({
                 className="w-1.5 h-1.5 rounded-full inline-block"
                 style={{ background: config!.color }}
               />
-              {config!.label}
+              AI: {config!.label}
             </span>
           </div>
         ) : (
