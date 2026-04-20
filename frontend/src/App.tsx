@@ -307,6 +307,7 @@ export default function App() {
             totalLocked={0}
             setPage={setPage}
             onViewEscrow={handleViewEscrow}
+            onConnect={handleConnect}
           />
         )}
 
@@ -332,6 +333,7 @@ export default function App() {
             totalLocked={totalLocked}
             setPage={setPage}
             onViewEscrow={handleViewEscrow}
+            onConnect={handleConnect}
           />
         )}
 

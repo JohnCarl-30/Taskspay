@@ -49,6 +49,110 @@ flowchart LR
 - **No custom backend**: the frontend talks directly to Soroban RPC and Supabase
 - **Direct wallet settlement**: approved funds move straight to the freelancer's Stellar address
 
+## UI/UX Snapshot: Landing & User Flows
+
+### Landing Page Design
+The Taskspay landing page is optimized for **executive trust** and **instant clarity**. Here's the structure:
+
+#### Hero Section
+- **Headline**: "The Era of Trustless Freelance"
+- **Subheading**: "Eliminate payment disputes with AI-generated milestones and automated on-chain settlements. Every deliverable is verified, every payment is guaranteed."
+- **Primary CTA**: "Connect Wallet" (triggers Freighter wallet connection)
+- **Secondary CTA**: "View Live Contract" (links to Stellar Expert explorer)
+- **Hero Card**: Live example escrow (#492) showing 3 milestone breakdown with status:
+  - ✓ Milestone 1: Wireframes (250 XLM) — Verified by OpenAI
+  - ⊙ Milestone 2: Beta API (500 XLM) — Awaiting Submission
+  - ○ Milestone 3: Deployment (250 XLM) — Not started
+
+#### Features Section (Why Taskspay)
+Three concise value propositions with hover effects:
+1. **🤖 AI-Powered Milestones** — Describe your project. Our AI instantly breaks it into fair, achievable milestones with built-in verification criteria.
+2. **🔒 On-Chain Settlement** — XLM locked on Stellar. Zero trust required. Payments execute automatically when milestones are verified.
+3. **⚡ Instant & Cheap** — 3-5 second finality. Under $0.01 per transaction. Keep 100% of your earnings—no platform cuts.
+
+#### Call-to-Action Section
+- **Headline**: "Ready to Build with Absolute Certainty?"
+- **Subheading**: "Get started in minutes. Connect your wallet, describe your project, and lock funds securely on Stellar."
+- **Primary CTA**: "Start Your First Escrow"
+- **Secondary CTA**: "Explore on GitHub"
+
+#### Footer
+- Minimalist design with only essential links: Explorer, GitHub, and Stellar
+- Copyright: "© 2024 Taskspay. Built on Stellar. Open source."
+
+### Key User Flows
+
+#### Flow 1: First-Time Client (No Wallet)
+```
+Landing Page
+  ↓ [Connect Wallet]
+Role Selection (Choose "Client")
+  ↓ [Confirm]
+Client Home (Overview + Dashboard)
+  ↓ [New Escrow]
+Create Escrow Form
+  ├─ Enter freelancer address
+  ├─ Enter project amount (XLM)
+  ├─ Enter project brief
+  └─ [Generate AI Milestones]
+Review Generated Milestones
+  ↓ [Create & Lock Funds]
+On-Chain Transaction (Soroban)
+  ↓ Escrow created + XLM locked
+Client Dashboard (Escrow now visible)
+```
+
+#### Flow 2: Freelancer Submission & Client Review
+```
+Freelancer Views Assigned Escrow
+  ↓ [Submit Work]
+Submission Form
+  ├─ Write description of work
+  ├─ Add links to proof (GitHub, demo, etc.)
+  ├─ Upload images/screenshots
+  └─ [Submit]
+Submission Stored + AI Verification Scores
+  ↓ [Notify Client]
+Client Receives Notification
+  ↓ Client Reviews Submission + AI Score
+Client Decision Page
+  ├─ View AI verification score (0-100)
+  ├─ View freelancer proof
+  └─ [Release Payment] or [Request Changes]
+If Released:
+  ├─ Soroban contract sends XLM to freelancer wallet
+  ├─ Payment recorded in history
+  ├─ Move to next milestone
+  └─ Repeat until completion
+If Rejected:
+  ├─ Freelancer notified
+  ├─ Resubmit with better evidence
+  └─ Back to submission
+```
+
+#### Flow 3: Project Completion & Refund
+```
+All Milestones Released
+  ↓ Escrow balance = 0
+Escrow Status: "Released"
+  ↓ Archive in history
+
+OR (if client cancels early)
+
+Remaining XLM in Escrow
+  ↓ [Refund]
+On-Chain Transaction (Refund executed)
+  ↓ XLM returns to client wallet
+Escrow Status: "Refunded"
+```
+
+### Design Principles Applied
+- **Clarity First**: No jargon. "Milestone" not "tranche". "Verify" not "attest".
+- **Visual Hierarchy**: Accent color (lime #c8f135) guides attention. Text in order of importance.
+- **Glass Morphism**: Semi-transparent panels with backdrop blur convey premium feel.
+- **Smooth Animations**: Fade-ins and scroll reveals guide users through the page without distraction.
+- **Micro-interactions**: Buttons scale on hover, milestone cards highlight on focus. Trust-building through responsiveness.
+
 ## Product Walkthrough
 
 <p align="center">

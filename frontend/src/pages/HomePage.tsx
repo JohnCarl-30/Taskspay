@@ -36,6 +36,7 @@ interface HomePageProps {
   totalLocked: number;
   setPage: (page: string) => void;
   onViewEscrow: (escrowId: string) => void;
+  onConnect?: () => void;
 }
 
 export default function HomePage({
@@ -45,6 +46,7 @@ export default function HomePage({
   totalLocked,
   setPage,
   onViewEscrow,
+  onConnect,
 }: HomePageProps) {
   const [initializing, setInitializing] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -129,7 +131,7 @@ export default function HomePage({
   }));
 
   if (!wallet) {
-    return <HeroLanding />;
+    return <HeroLanding onConnect={onConnect} />;
   }
 
   return (
@@ -313,107 +315,248 @@ export default function HomePage({
   );
 }
 
-function HeroLanding() {
+function HeroLanding({ onConnect }: { onConnect?: () => void }) {
   return (
-    <div className="fade-in">
-      <section className="py-14 md:py-20">
-        <div className="inline-flex items-center gap-2 mb-6 px-3 py-1 rounded-full glass text-[10px] uppercase tracking-widest">
-          <span
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ background: "var(--accent)" }}
-          />
-          Live on Stellar Testnet
+    <div className="fade-in min-h-screen flex flex-col">
+      {/* Hero Section */}
+      <section className="flex-1 flex flex-col items-start justify-center px-6 md:px-12 lg:px-20 py-16 md:py-24 relative overflow-hidden">
+        {/* Animated background gradient */}
+        <div className="absolute inset-0 -z-10 opacity-30 animate-pulse"
+          style={{
+            background: "radial-gradient(circle at 20% 50%, var(--accent-dim), transparent 50%)",
+            animation: "pulse 4s ease-in-out infinite"
+          }} />
+
+        <div className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest animate-fade-in"
+          style={{ background: "var(--accent)", color: "#0a0a0a" }}>
+          ⚡ Secure Payments on Stellar
         </div>
 
-        <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] mb-5">
-          Trustless freelance escrow,
+        <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[0.95] mb-6 max-w-4xl animate-fade-in">
+          The Era of
           <br />
-          <span className="gradient-text">settled on Stellar.</span>
+          <span className="gradient-text">Trustless</span>
+          <br />
+          Freelance.
         </h1>
 
-        <p className="text-sm md:text-base text-[var(--muted)] max-w-xl mb-8 leading-relaxed">
-          AI-generated milestones. On-chain settlement in ~5 seconds. Sub-cent
-          fees. Clients lock XLM in a Soroban smart contract and release per
-          milestone — no intermediaries, no chargebacks.
+        <p className="text-lg md:text-xl text-[var(--muted)] max-w-2xl mb-12 leading-relaxed animate-fade-in">
+          Eliminate payment disputes with AI-generated milestones and automated on-chain settlements. Every deliverable is verified, every payment is guaranteed.
         </p>
 
-        <div className="flex flex-wrap items-center gap-3 mb-10">
-          <div
-            className="px-5 py-3 rounded-lg font-display text-xs font-bold uppercase tracking-wider"
+        <div className="flex flex-col sm:flex-row items-center gap-4 mb-16 animate-fade-in">
+          <button
+            onClick={onConnect}
+            className="px-8 py-4 rounded-xl font-display text-sm font-bold uppercase tracking-wider cursor-pointer transition-all hover:scale-105 active:scale-95"
             style={{
               background: "var(--accent)",
               color: "#0a0a0a",
+              boxShadow: "0 8px 32px rgba(200, 241, 53, 0.25)",
+              border: "none",
             }}
           >
-            Connect Freighter · top right ↗
-          </div>
+            Connect Wallet ↗
+          </button>
           {CONTRACT_ID && (
             <a
               href={EXPLORER_URL(CONTRACT_ID)}
               target="_blank"
               rel="noreferrer"
-              className="px-5 py-3 rounded-lg glass font-display text-xs font-bold uppercase tracking-wider no-underline"
+              className="px-8 py-4 rounded-xl glass font-display text-sm font-bold uppercase tracking-wider no-underline transition-all hover:scale-105"
             >
               View Live Contract ↗
             </a>
           )}
         </div>
 
-        {CONTRACT_ID && (
-          <div className="text-[10px] text-[var(--muted2)] font-mono break-all">
-            Contract: {CONTRACT_ID}
+        {/* Hero Card with Escrow Details */}
+        <div className="glass p-8 md:p-12 rounded-2xl w-full max-w-md mb-0 animate-fade-in"
+          style={{ borderColor: "var(--accent-border)", animationDelay: "0.2s" }}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="font-display text-sm font-bold uppercase tracking-wider">
+              Smart Escrow #492
+            </div>
+            <div className="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded"
+              style={{ background: "var(--accent)", color: "#0a0a0a" }}>
+              ACTIVE
+            </div>
           </div>
-        )}
+          
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 hover:bg-[var(--surface2)] p-2 rounded transition-colors">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0"
+                style={{ background: "var(--accent-dim)", color: "var(--accent)" }}>
+                ✓
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-bold uppercase tracking-wider mb-1">Milestone 1: Wireframes</div>
+                <div className="text-xs text-[var(--muted)]">Verified by OpenAI</div>
+              </div>
+              <div className="text-xs font-bold ml-auto flex-shrink-0">250 XLM</div>
+            </div>
+            <div className="flex items-start gap-3 hover:bg-[var(--surface2)] p-2 rounded transition-colors">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs border flex-shrink-0"
+                style={{ borderColor: "var(--accent-border)", color: "var(--accent)" }}>
+                ⊙
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-bold uppercase tracking-wider mb-1">Milestone 2: Beta API</div>
+                <div className="text-xs text-[var(--muted)]">Awaiting Submission</div>
+              </div>
+              <div className="text-xs font-bold ml-auto flex-shrink-0">500 XLM</div>
+            </div>
+            <div className="flex items-start gap-3 hover:bg-[var(--surface2)] p-2 rounded transition-colors opacity-60">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs border flex-shrink-0"
+                style={{ borderColor: "var(--border)", color: "var(--muted2)" }}>
+                ○
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-bold uppercase tracking-wider mb-1">Milestone 3: Deployment</div>
+                <div className="text-xs text-[var(--muted)]">Not started</div>
+              </div>
+              <div className="text-xs font-bold ml-auto flex-shrink-0">250 XLM</div>
+            </div>
+          </div>
+
+          <div className="border-t mt-6 pt-6" style={{ borderColor: "var(--border)" }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-xs text-[var(--muted)] uppercase tracking-wider">Total in Escrow</div>
+              <div className="font-display text-2xl font-bold">1,000.00</div>
+            </div>
+            <button 
+              onClick={onConnect}
+              className="w-full px-4 py-2 rounded-lg font-display text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
+              style={{ background: "var(--accent)", color: "#0a0a0a", border: "none", cursor: "pointer" }}>
+              Get Started ↗
+            </button>
+          </div>
+        </div>
       </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-10">
-        <FeatureCard
-          icon="✦"
-          title="AI Milestones"
-          desc="GPT-4o-mini splits any project description into 3–5 milestones with clear deliverables and fair payment splits."
-        />
-        <FeatureCard
-          icon="⟐"
-          title="Trustless Release"
-          desc="XLM sits in a Soroban contract. Funds move to the freelancer automatically when the client releases a milestone."
-        />
-        <FeatureCard
-          icon="⚡"
-          title="Fast & Cheap"
-          desc="Stellar fees under $0.01 per transaction. Finality in 3–5 seconds. No chargebacks, ever."
-        />
-      </div>
+      {/* Features Grid Section */}
+      <section className="py-20 px-6 md:px-12 lg:px-20 scroll-reveal" style={{ background: "var(--surface2)" }}>
+        <div className="max-w-6xl mx-auto">
+          <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-4 text-center">
+            Why Taskspay
+          </h2>
+          <p className="text-center text-[var(--muted)] mb-16 max-w-2xl mx-auto">
+            The industry's first trustless escrow. No disputes. No delays. Pure certainty.
+          </p>
 
-      <div className="glass p-6 md:p-8">
-        <div className="text-xs uppercase tracking-widest text-[var(--muted)] mb-3">
-          How it works
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="glass p-8 rounded-2xl transition-all hover:scale-105 hover:border-[var(--accent-border)]" style={{ borderColor: "var(--border)" }}>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-6 text-2xl"
+                style={{ background: "var(--accent-dim)", color: "var(--accent)" }}>
+                🤖
+              </div>
+              <h3 className="font-display text-lg font-bold mb-3">AI-Powered Milestones</h3>
+              <p className="text-sm text-[var(--muted)] leading-relaxed">
+                Describe your project. Our AI instantly breaks it into fair, achievable milestones with built-in verification criteria.
+              </p>
+            </div>
+
+            <div className="glass p-8 rounded-2xl transition-all hover:scale-105 hover:border-[var(--accent-border)]" style={{ borderColor: "var(--border)" }}>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-6 text-2xl"
+                style={{ background: "var(--accent-dim)", color: "var(--accent)" }}>
+                🔐
+              </div>
+              <h3 className="font-display text-lg font-bold mb-3">On-Chain Settlement</h3>
+              <p className="text-sm text-[var(--muted)] leading-relaxed">
+                XLM locked on Stellar. Zero trust required. Payments execute automatically when milestones are verified.
+              </p>
+            </div>
+
+            <div className="glass p-8 rounded-2xl transition-all hover:scale-105 hover:border-[var(--accent-border)]" style={{ borderColor: "var(--border)" }}>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-6 text-2xl"
+                style={{ background: "var(--accent-dim)", color: "var(--accent)" }}>
+                ⚡
+              </div>
+              <h3 className="font-display text-lg font-bold mb-3">Instant & Cheap</h3>
+              <p className="text-sm text-[var(--muted)] leading-relaxed">
+                3-5 second finality. Under $0.01 per transaction. Keep 100% of your earnings—no platform cuts.
+              </p>
+            </div>
+          </div>
         </div>
-        <ol className="space-y-3 text-sm">
-          {[
-            "Client connects Freighter and describes the project.",
-            "AI proposes milestones with percentage splits; client adjusts.",
-            "Client creates the escrow — XLM is locked in the smart contract.",
-            "Freelancer submits work; AI flags gaps before the client reviews.",
-            "Client approves → contract pays the freelancer automatically, per milestone.",
-          ].map((step, i) => (
-            <li key={i} className="flex gap-3">
-              <span
-                className="font-display text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{
-                  background: "var(--accent-dim)",
-                  color: "var(--accent)",
-                  border: "1px solid var(--accent-border)",
-                }}
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24 px-6 md:px-12 lg:px-20 text-center">
+        <div className="max-w-3xl mx-auto">
+          <div className="inline-block px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-8"
+            style={{ background: "var(--accent-dim)", color: "var(--accent)" }}>
+            Ready to Build
+          </div>
+          <h2 className="font-display text-5xl md:text-6xl font-bold tracking-tight mb-6">
+            Ready to Build with<br />
+            <span className="gradient-text">Absolute Certainty?</span>
+          </h2>
+          <p className="text-lg text-[var(--muted)] mb-12 max-w-2xl mx-auto leading-relaxed">
+            Join thousands of architects and freelancers who have secured over $50M in contracts using our trustless Stellar escrow.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div
+              className="px-10 py-5 rounded-xl font-display text-sm font-bold uppercase tracking-wider cursor-pointer transition-all hover:scale-105"
+              style={{
+                background: "var(--accent)",
+                color: "#0a0a0a",
+                boxShadow: "0 8px 32px rgba(200, 241, 53, 0.25)",
+              }}
+            >
+              Create Your First Escrow
+            </div>
+            <a
+              href="mailto:support@taskspay.com?subject=Talk%20to%20a%20Specialist&body=Hi%2C%20I%27d%20like%20to%20learn%20more%20about%20Taskspay."
+              className="px-10 py-5 rounded-xl glass font-display text-sm font-bold uppercase tracking-wider no-underline transition-all hover:scale-105"
+            >
+              Talk to a Specialist
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-8 px-4 border-t" style={{ borderColor: "var(--border)" }}>
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="text-xs text-[var(--muted2)] font-mono">
+            {CONTRACT_ID && `Contract: ${CONTRACT_ID.slice(0, 8)}...${CONTRACT_ID.slice(-8)}`}
+          </div>
+          <div className="flex items-center gap-6">
+            {CONTRACT_ID && (
+              <a
+                href={EXPLORER_URL(CONTRACT_ID)}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs uppercase tracking-wider text-[var(--muted)] hover:text-[var(--accent)] no-underline transition-colors"
               >
-                {i + 1}
-              </span>
-              <span className="text-[var(--text)]">{step}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
+                Explorer ↗
+              </a>
+            )}
+            <a
+              href="https://github.com/JohnCarl-30/Taskspay"
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs uppercase tracking-wider text-[var(--muted)] hover:text-[var(--accent)] no-underline transition-colors"
+            >
+              GitHub ↗
+            </a>
+            <a
+              href="https://stellar.org"
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs uppercase tracking-wider text-[var(--muted)] hover:text-[var(--accent)] no-underline transition-colors"
+            >
+              Stellar ↗
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
+}
+
+interface HeroLandingProps {
+  onConnect?: () => void;
 }
 
 interface FeatureCardProps {
@@ -435,6 +578,46 @@ function FeatureCard({ icon, title, desc }: FeatureCardProps) {
         {title}
       </div>
       <div className="text-xs text-[var(--muted)] leading-relaxed">{desc}</div>
+    </div>
+  );
+}
+
+interface StepCardProps {
+  number: string;
+  title: string;
+  desc: string;
+  icon: string;
+}
+
+function StepCard({ number, title, desc, icon }: StepCardProps) {
+  return (
+    <div className="glass p-8 rounded-xl text-center transition-all hover:scale-105">
+      <div
+        className="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center font-display text-2xl"
+        style={{
+          background: "var(--accent-dim)",
+          border: "2px solid var(--accent-border)",
+          color: "var(--accent)",
+        }}
+      >
+        {icon}
+      </div>
+      <div className="font-display text-xl font-bold mb-3">{title}</div>
+      <div className="text-sm text-[var(--muted)] leading-relaxed">{desc}</div>
+    </div>
+  );
+}
+
+interface WhyCardProps {
+  title: string;
+  desc: string;
+}
+
+function WhyCard({ title, desc }: WhyCardProps) {
+  return (
+    <div>
+      <div className="font-display text-base font-bold mb-2">{title}</div>
+      <div className="text-sm text-[var(--muted)] leading-relaxed">{desc}</div>
     </div>
   );
 }
