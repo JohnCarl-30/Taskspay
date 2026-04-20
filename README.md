@@ -149,26 +149,38 @@ Escrow Status: "Refunded"
 
 The landing page showcases the trustless escrow concept with a premium, animated design:
 
-<p align="center">
-  <img src="./docs/screenshots/landing-hero.png" alt="Taskspay landing hero section with headline and CTA" width="100%" />
-</p>
+#### Hero Section
+"The Era of Trustless Freelance" headline with value proposition and dual CTAs (Connect Wallet, View Live Contract). Interactive escrow example card showing milestone breakdown:
+- **Badge**: "⚡ SECURE PAYMENTS ON STELLAR"
+- **Main Headline**: "The Era of Trustless Freelance" (with gradient text on "Trustless")
+- **Value Prop**: "Eliminate payment disputes with AI-generated milestones and automated on-chain settlements. Every deliverable is verified, every payment is guaranteed."
+- **Primary CTA**: "CONNECT WALLET →" (lime green button with glow effect)
+- **Secondary CTA**: "VIEW LIVE CONTRACT →" (glass morphism button)
+- **Hero Card**: Smart Escrow #492 (ACTIVE status) showing:
+  - ✓ Milestone 1: Wireframes (250 XLM) — Verified by OpenAI
+  - ⊙ Milestone 2: Beta API (500 XLM) — Awaiting Submission
+  - ○ Milestone 3: Deployment (250 XLM) — Not started
+  - Total in Escrow: 1,000.00 XLM
+  - Button: "GET STARTED →"
 
-**Hero Section**: "The Era of Trustless Freelance" headline with value proposition and dual CTAs (Connect Wallet, View Live Contract). Interactive escrow example card showing milestone breakdown.
+#### Features Section ("Why Taskspay")
+Three core value propositions with hover effects on a light background:
+- **🤖 AI-Powered Milestones** — "Describe your project. Our AI instantly breaks it into fair, achievable milestones with built-in verification criteria."
+- **🔒 On-Chain Settlement** — "XLM locked on Stellar. Zero trust required. Payments execute automatically when milestones are verified."
+- **⚡ Instant & Cheap** — "3-5 second finality. Under $0.01 per transaction. Keep 100% of your earnings—no platform cuts."
 
-<p align="center">
-  <img src="./docs/screenshots/landing-features.png" alt="Why Taskspay features section" width="100%" />
-</p>
+**Headline**: "Why Taskspay"
+**Subheading**: "The industry's first trustless escrow. No disputes. No delays. Pure certainty."
 
-**Features Section**: Three core value propositions with hover effects:
-- 🤖 **AI-Powered Milestones** — Instant breakdown of projects into fair, achievable milestones
-- 🔒 **On-Chain Settlement** — XLM locked on Stellar with automatic verification-based payouts
-- ⚡ **Instant & Cheap** — 3-5 second finality, under $0.01 per transaction, zero platform fees
+#### CTA Section
+"Ready to Build with Absolute Certainty?" with dual action buttons and footer:
 
-<p align="center">
-  <img src="./docs/screenshots/landing-cta.png" alt="Ready to Build call-to-action section" width="100%" />
-</p>
-
-**CTA Section**: "Ready to Build with Absolute Certainty?" with dual action buttons (Start Escrow, Explore GitHub) and footer links to Explorer, GitHub, and Stellar.
+- **Badge**: "READY TO BUILD" (lime green text on dim background)
+- **Main Headline**: "Ready to Build with" / "Absolute Certainty?" (with "Absolute" in lime green and "Certainty?" in purple gradient)
+- **Subheading**: "Get started in minutes. Connect your wallet, describe your project, and lock funds securely on Stellar."
+- **Primary CTA**: "START YOUR FIRST ESCROW" (lime green button with glow)
+- **Secondary CTA**: "EXPLORE ON GITHUB" (glass morphism button)
+- **Footer**: Contract address display + links to Explorer, GitHub, and Stellar
 
 ### Application Flows
 
