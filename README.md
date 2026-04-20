@@ -147,64 +147,40 @@ Escrow Status: "Refunded"
 
 ### Landing Page (Redesigned)
 
-The landing page showcases trustless escrow with a premium, animated design optimized for executive clarity.
-
-#### Navigation Bar
-- **Logo**: "Taskspay" (lime green text)
-- **Links**: HOME, NEW ESCROW, HISTORY
-- **Theme Toggle**: Sun/moon icon for dark/light mode
-- **CTA**: "CONNECT WALLET" button (lime green, right-aligned)
+The landing page showcases the trustless escrow concept with a premium, animated design:
 
 #### Hero Section
-Central hero with gradient text and dual CTAs:
-- **Badge**: "⚡ SECURE PAYMENTS ON STELLAR" (lime green rounded pill, top-center)
-- **Main Headline**: "The Era of Trustless Freelance" 
-  - "The Era of" → Black text
-  - "Trustless" → Lime green (#c8f135)
-  - "Freelance." → Purple/blue gradient
-- **Value Proposition**: "Eliminate payment disputes with AI-generated milestones and automated on-chain settlements. Every deliverable is verified, every payment is guaranteed." (dark gray body text, centered)
-- **Primary CTA**: "CONNECT WALLET →" (lime green button, large, hover glow effect)
-- **Secondary CTA**: "VIEW LIVE CONTRACT →" (glass morphism button, secondary style)
-- **Example Escrow Card**: "SMART ESCROW #492" with ACTIVE badge
-  - 3 milestones with visual status indicators:
-    - ✓ Wireframes (250 XLM) — Completed
-    - ⊙ Beta API (500 XLM) — In Progress  
-    - ○ Deployment (250 XLM) — Pending
-  - Total: 1,000.00 XLM
-  - "GET STARTED →" button
+"The Era of Trustless Freelance" headline with value proposition and dual CTAs (Connect Wallet, View Live Contract). Interactive escrow example card showing milestone breakdown:
+- **Badge**: "⚡ SECURE PAYMENTS ON STELLAR"
+- **Main Headline**: "The Era of Trustless Freelance" (with gradient text on "Trustless")
+- **Value Prop**: "Eliminate payment disputes with AI-generated milestones and automated on-chain settlements. Every deliverable is verified, every payment is guaranteed."
+- **Primary CTA**: "CONNECT WALLET →" (lime green button with glow effect)
+- **Secondary CTA**: "VIEW LIVE CONTRACT →" (glass morphism button)
+- **Hero Card**: Smart Escrow #492 (ACTIVE status) showing:
+  - ✓ Milestone 1: Wireframes (250 XLM) — Verified by OpenAI
+  - ⊙ Milestone 2: Beta API (500 XLM) — Awaiting Submission
+  - ○ Milestone 3: Deployment (250 XLM) — Not started
+  - Total in Escrow: 1,000.00 XLM
+  - Button: "GET STARTED →"
 
 #### Features Section ("Why Taskspay")
-Light gray background section with centered header and three feature cards:
-- **Section Headline**: "Why Taskspay"
-- **Subheading**: "The industry's first trustless escrow. No disputes. No delays. Pure certainty."
-- **Feature Cards** (3-column responsive grid, white cards, hover scale-up):
-  1. **🤖 AI-Powered Milestones** 
-     - "Describe your project. Our AI instantly breaks it into fair, achievable milestones with built-in verification criteria."
-  2. **🔒 On-Chain Settlement** 
-     - "XLM locked on Stellar. Zero trust required. Payments execute automatically when milestones are verified."
-  3. **⚡ Instant & Cheap** 
-     - "3-5 second finality. Under $0.01 per transaction. Keep 100% of your earnings—no platform cuts."
+Three core value propositions with hover effects on a light background:
+- **🤖 AI-Powered Milestones** — "Describe your project. Our AI instantly breaks it into fair, achievable milestones with built-in verification criteria."
+- **🔒 On-Chain Settlement** — "XLM locked on Stellar. Zero trust required. Payments execute automatically when milestones are verified."
+- **⚡ Instant & Cheap** — "3-5 second finality. Under $0.01 per transaction. Keep 100% of your earnings—no platform cuts."
 
-#### Call-to-Action Section
-Bottom section with strong emphasis and social proof:
-- **Badge**: "READY TO BUILD" (lime green text, small uppercase)
-- **Main Headline**: "Ready to Build with Absolute Certainty?"
-  - "Ready to Build with" → Black text
-  - "Absolute" → Lime green (#c8f135)
-  - "Certainty?" → Purple/blue gradient
-- **Subheading**: "Join thousands of architects and freelancers who have secured over $50M in contracts using our trustless Stellar escrow."
-- **Primary CTA**: "CREATE YOUR FIRST ESCROW" (lime green button, large)
-- **Secondary CTA**: "TALK TO A SPECIALIST" (glass morphism button)
-- **Footer**: 
-  - Contract address: "Contract: CDQFDOAZ...XAVAV3Z3"
-  - Navigation links: EXPLORER →, GITHUB →, STELLAR → (right-aligned, gray text)
+**Headline**: "Why Taskspay"
+**Subheading**: "The industry's first trustless escrow. No disputes. No delays. Pure certainty."
 
-#### Design System
-- **Color Palette**: Lime green accent (#c8f135), secondary green (#a3d420), dark backgrounds (near-black), purple gradient for emphasis
-- **Typography**: Bold display font (Syne) for headlines, monospace for addresses/code
-- **Animations**: Fade-in on page load, scroll-reveal for each section with staggered timing, hover scale effects on buttons and cards
-- **Interactivity**: Hover glow on CTA buttons, card lift effects on feature cards, smooth transitions between states
-- **Responsive**: Full-width hero on desktop, single-column stacked layout on mobile, touch-optimized button sizes
+#### CTA Section
+"Ready to Build with Absolute Certainty?" with dual action buttons and footer:
+
+- **Badge**: "READY TO BUILD" (lime green text on dim background)
+- **Main Headline**: "Ready to Build with" / "Absolute Certainty?" (with "Absolute" in lime green and "Certainty?" in purple gradient)
+- **Subheading**: "Get started in minutes. Connect your wallet, describe your project, and lock funds securely on Stellar."
+- **Primary CTA**: "START YOUR FIRST ESCROW" (lime green button with glow)
+- **Secondary CTA**: "EXPLORE ON GITHUB" (glass morphism button)
+- **Footer**: Contract address display + links to Explorer, GitHub, and Stellar
 
 ### Application Flows
 
