@@ -76,11 +76,7 @@ Three concise value propositions with hover effects:
 - **Primary CTA**: "Start Your First Escrow"
 - **Secondary CTA**: "Explore on GitHub"
 
-#### Footer
-- Minimalist design with only essential links: Explorer, GitHub, and Stellar
-- Copyright: "© 2024 Taskspay. Built on Stellar. Open source."
 
-### Key User Flows
 
 #### Flow 1: First-Time Client (No Wallet)
 ```
@@ -146,14 +142,35 @@ On-Chain Transaction (Refund executed)
 Escrow Status: "Refunded"
 ```
 
-### Design Principles Applied
-- **Clarity First**: No jargon. "Milestone" not "tranche". "Verify" not "attest".
-- **Visual Hierarchy**: Accent color (lime #c8f135) guides attention. Text in order of importance.
-- **Glass Morphism**: Semi-transparent panels with backdrop blur convey premium feel.
-- **Smooth Animations**: Fade-ins and scroll reveals guide users through the page without distraction.
-- **Micro-interactions**: Buttons scale on hover, milestone cards highlight on focus. Trust-building through responsiveness.
 
 ## Product Walkthrough
+
+### Landing Page (Redesigned)
+
+The landing page showcases the trustless escrow concept with a premium, animated design:
+
+<p align="center">
+  <img src="./docs/screenshots/landing-hero.png" alt="Taskspay landing hero section with headline and CTA" width="100%" />
+</p>
+
+**Hero Section**: "The Era of Trustless Freelance" headline with value proposition and dual CTAs (Connect Wallet, View Live Contract). Interactive escrow example card showing milestone breakdown.
+
+<p align="center">
+  <img src="./docs/screenshots/landing-features.png" alt="Why Taskspay features section" width="100%" />
+</p>
+
+**Features Section**: Three core value propositions with hover effects:
+- 🤖 **AI-Powered Milestones** — Instant breakdown of projects into fair, achievable milestones
+- 🔒 **On-Chain Settlement** — XLM locked on Stellar with automatic verification-based payouts
+- ⚡ **Instant & Cheap** — 3-5 second finality, under $0.01 per transaction, zero platform fees
+
+<p align="center">
+  <img src="./docs/screenshots/landing-cta.png" alt="Ready to Build call-to-action section" width="100%" />
+</p>
+
+**CTA Section**: "Ready to Build with Absolute Certainty?" with dual action buttons (Start Escrow, Explore GitHub) and footer links to Explorer, GitHub, and Stellar.
+
+### Application Flows
 
 <p align="center">
   <img src="./docs/screenshots/landing-page.png" alt="Taskspay landing page" width="49%" />
